@@ -89,3 +89,5 @@ A:Python的运行效率不高，慢属于正常现象
 ## 鸣谢
 
 - 感谢[@undefftr](https://github.com/undefftr)为图标设计提供支持
+
+- 感谢[@ShihaoShen2025](https://github.com/ShihaoShen2025)试图修改.gitignore获得贡献者身份

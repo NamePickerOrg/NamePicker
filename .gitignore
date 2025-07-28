@@ -19,3 +19,6 @@ qr.png
 /names/0.NamePicker.csv
 proto.zip
 release
+main.build
+main.dist
+.venv_legacy

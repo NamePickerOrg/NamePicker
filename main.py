@@ -19,6 +19,9 @@ import network
 if os.name == 'nt':
     from win32com.client import Dispatch
 
+# 作为主力开发者，我只需要夹带致死量私货就行了
+# 但是别的贡献者和Pylint要考虑的可就多了
+
 temp_dir = tempfile.gettempdir()
 err_info = ""
 err_dialog = ""
@@ -259,6 +262,7 @@ class Config:
         with open(self.filename,"w",encoding="utf-8") as f:
             f.write(json.dumps(self.cfg))
 
+# Huanyu子项没有任何作用，但是我就是懒得删
 CFGRULE = {
     "General": {"allowRepeat": bool,"autoStartup": bool,"chooseKey": str,"supportCS": bool,"floatingPos":str,"autoCheck":bool},
     "Secure": {"lock":bool,"password":str,"require2FA":bool,"2FAMethod":str,"OTPnote":str},
@@ -283,6 +287,7 @@ logger.add("out.log")
 logger.add(sys.stderr, level=cfg.get("Debug","logLevel"))
 logger.info(f"NamePicker {VERSION} - Codename {CODENAME} (Inside version {VER_NO},Plugin API Version {APIVER})")
 logger.info("「历经生死、重获新生的忘归人，何时才能返乡？⌋")
+# 信我，我真没夹带私货
 try:
     core = Choose(f"names/{os.listdir("names")[0]}")
 except FileNotFoundError:
@@ -313,6 +318,7 @@ class UI(RinUIWindow):
         self.bridge = Bridge()
         self.engine.rootContext().setContextProperty("Bridge", self.bridge)
 
+# 瞎jb命名重灾区，你猜我pylint怎么干到3/10的
 class Bridge(QObject):
     chgVer = Signal(str)
     chgProg = Signal(int)
@@ -523,6 +529,7 @@ class Bridge(QObject):
     def error(self):
         raise Exception("喵")
     
+# Dipussyk神力
 class TrayIcon(QSystemTrayIcon):
     def __init__(self, parent=None):
         super().__init__(parent)
