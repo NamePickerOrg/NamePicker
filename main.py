@@ -46,31 +46,11 @@ if not sys.stderr:
             return True
     sys.stderr = FakeStderr()
 
-# class ErrorWindow(RinUIWindow):
-#     def __init__(self):
-#         super().__init__(resource_path("pages/error.qml"))
-#         self.bridge = ErrorBridge()
-#         self.engine.rootContext().setContextProperty("Bridge", self.bridge)
-
-# class ErrorBridge(QObject):
-#     @Slot(result=str)
-#     def err_info(self):
-#         global err_info
-#         return err_info
-
-#     @Slot()
-#     def restart(self):
-#         if not "noshortcut" in sys.argv:
-#             main.tray.hide()
-#         os.execl(sys.executable, sys.executable, *sys.argv)
-
 def hook_exceptions(exc_type, exc_value, exc_tb):
     error_details = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
     if "TypeError: disconnect() of all signals failed" in error_details:
         return
     logger.error(error_details)
-    # err_info = error_details
-    # w = ErrorWindow()
 
 sys.excepthook = hook_exceptions
 
@@ -79,21 +59,6 @@ def resource_path(relative_path:str)-> str:
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.abspath(relative_path)
 
-# class LifeCycle(QThread):
-#     def __init__(self, parent = None):
-#         super().__init__(parent)
-#         self.mutex = QMutex()  # 互斥锁，用于线程同步
-#         self.cond = QWaitCondition()
-#         self.stop = False
-
-#     def run(self):
-#         while True:
-#             with QMutexLocker(self.mutex):
-#                 if self.stop:
-#                     return
-#                 # 接插件lifecycle
-#                 time.sleep(0.05)
-            
 class Choose:
     def __init__(self,path:str):
         self.names = []
