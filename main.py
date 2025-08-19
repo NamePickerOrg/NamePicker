@@ -25,15 +25,16 @@ if os.name == 'nt':
 temp_dir = tempfile.gettempdir()
 err_info = ""
 err_dialog = ""
-VERSION = "v2.2.0d3rel"
+VERSION = "v2.2.0d4rel"
 CODENAME = "Fugue"
-VER_NO = 7
+VER_NO = 8
 APIVER = 2
 SEXFAVOR_ALL = NUMFAVOR_BOTH = -1
 SEXFAVOR_BOY = NUMFAVOR_1 = 0
 SEXFAVOR_GIRL = NUMFAVOR_2 = 1
 SEXFAVOR_SPEC = 2
 
+# 为了让logger正常工作制造的stderr
 if not sys.stderr:
     class FakeStderr:
         def __init__(self):
@@ -59,6 +60,7 @@ def resource_path(relative_path:str)-> str:
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.abspath(relative_path)
 
+# NamePicker核心
 class Choose:
     def __init__(self,path:str):
         self.names = []
@@ -143,7 +145,7 @@ class Choose:
         if res != []:
             return res
         else:
-            return ["bydcnm"]
+            return ["bydcnm"] # 做个文明开发者
 
 def set_startup() -> None:
     if os.name != 'nt':
@@ -176,6 +178,7 @@ def mac_addr() -> str:
     mac_address = ':'.join(['{:02x}'.format((int(i, 16) & 0xff)) for i in hex(int(ip_address.split('.')[0])).split('0x')[1:]])
     return mac_address
 
+# 简陋的配置管理类
 class Config:
     def __init__(self,filename:str,rules:dict,default:dict):
         self.filename = filename
@@ -244,6 +247,7 @@ CFGDEFAULT = {
     "Debug": {"logLevel": "INFO"}
 }
 
+# 初始化一堆意义不明的变量
 cfg = Config("config.json",CFGRULE,CFGDEFAULT)
 force = False
 if os.path.exists("out.log"):
@@ -253,6 +257,7 @@ logger.add(sys.stderr, level=cfg.get("Debug","logLevel"))
 logger.info(f"NamePicker {VERSION} - Codename {CODENAME} (Inside version {VER_NO},Plugin API Version {APIVER})")
 logger.info("「历经生死、重获新生的忘归人，何时才能返乡？⌋")
 # 信我，我真没夹带私货
+# 我萤伟大，无需多言
 try:
     core = Choose(f"names/{os.listdir("names")[0]}")
 except FileNotFoundError:
@@ -284,6 +289,7 @@ class UI(RinUIWindow):
         self.engine.rootContext().setContextProperty("Bridge", self.bridge)
 
 # 瞎jb命名重灾区，你猜我pylint怎么干到3/10的
+# 和qml通信，也算一种code behind?
 class Bridge(QObject):
     chgVer = Signal(str)
     chgProg = Signal(int)
@@ -383,7 +389,7 @@ class Bridge(QObject):
 
     @Property(str)
     def VerTxt(self) -> str:
-        return "当前版本：{VERSION} - Codename {CODENAME}"
+        return f"当前版本：{VERSION} - Codename {CODENAME}"
     
     @Slot(str)
     def setSexFavor(self,sexf:str) -> None:
@@ -495,6 +501,7 @@ class Bridge(QObject):
         raise Exception("喵")
     
 # Dipussyk神力
+# 任务栏图标和浮窗
 class TrayIcon(QSystemTrayIcon):
     def __init__(self, parent=None):
         super().__init__(parent)
