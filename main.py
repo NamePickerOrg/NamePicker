@@ -25,9 +25,9 @@ if os.name == 'nt':
 temp_dir = tempfile.gettempdir()
 err_info = ""
 err_dialog = ""
-VERSION = "v2.2.0d4rel"
+VERSION = "v2.2.0d5rel"
 CODENAME = "Fugue"
-VER_NO = 8
+VER_NO = 9
 APIVER = 2
 SEXFAVOR_ALL = NUMFAVOR_BOTH = -1
 SEXFAVOR_BOY = NUMFAVOR_1 = 0
