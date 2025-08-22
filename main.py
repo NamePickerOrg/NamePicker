@@ -417,6 +417,26 @@ class Bridge(QObject):
         return 1
     
     @Slot()
+    def registerURL(self) -> None:
+        current_file_path = os.path.abspath(__file__)
+        logger.debug(current_file_path)
+        content = f"""Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Classes\\namepicker]
+"URL Protocol"=""
+@=""
+
+[HKEY_CURRENT_USER\Software\Classes\\namepicker\Shell]
+
+[HKEY_CURRENT_USER\Software\Classes\\namepicker\Shell\Open]
+
+[HKEY_CURRENT_USER\Software\Classes\\namepicker\Shell\Open\command]
+@="{current_file_path.replace("/",r"\\")} noshortcut"
+"""
+        with open("file.reg","w",encoding="utf-8") as f:
+            f.write(content)
+
+    @Slot()
     def checkNew(self) -> str:
         global force,th
         th.versionChange.connect(self.emitCg)

@@ -451,6 +451,24 @@ FluentPage {
         }
         SettingCard {
             width: parent.width
+            title: qsTr("注册URL协议")
+            description: qsTr("注册成功后，即可通过namepicker://调起没有浮窗的NamePicker\n什么你问怎么取消注册？抱歉我没做，自行删除对应的注册表条目即可")
+            icon: "ic_fluent_key_reset_20_regular"
+            content: Button{
+                text: qsTr("点击注册")
+                onClicked: {
+                    Bridge.registerURL()
+                    floatLayer.createInfoBar({
+                        severity: Severity.Success,
+                        title: qsTr("成功"),
+                        text: qsTr("导入软件目录下的file.reg即可注册")
+                    })
+                }
+            }
+            enabled: Bridge.getVerified()
+        }
+        SettingCard {
+            width: parent.width
             title: qsTr("课表软件联动")
             description: qsTr("启用后将在ClassIsland/Class Widgets上（而非主界面）显示抽选结果，需要安装对应插件")
             icon: "ic_fluent_arrow_repeat_all_20_regular"
