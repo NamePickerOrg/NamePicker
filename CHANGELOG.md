@@ -1,8 +1,6 @@
-## 新特性
+## Bug修复
 
-- 支持在软件内注册URL Scheme
-
-注册完成后可以通过`namepicker://`调起没有浮窗的NamePicker（和附加`noshortcut`参数效果相同）
+- 修复URL Scheme注册异常的问题喵
 
 ## 已知Bug
 

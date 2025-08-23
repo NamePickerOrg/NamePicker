@@ -2,6 +2,7 @@ import json
 import time
 import base64
 import hashlib
+import pathlib
 import socket
 import os
 import sys
@@ -18,16 +19,17 @@ from RinUI import RinUIWindow
 import network
 if os.name == 'nt':
     from win32com.client import Dispatch
-
+print(os.path.abspath(__file__))
 # 作为主力开发者，我只需要夹带致死量私货就行了
 # 但是别的贡献者和Pylint要考虑的可就多了
+# 如果你正在阅读这段文字，请不要在使用源代码运行的情况下注册URL协议！会坏掉的
 
 temp_dir = tempfile.gettempdir()
 err_info = ""
 err_dialog = ""
-VERSION = "v2.2.0d5rel"
+VERSION = "v2.2.0d6rel"
 CODENAME = "Fugue"
-VER_NO = 9
+VER_NO = 10
 APIVER = 2
 SEXFAVOR_ALL = NUMFAVOR_BOTH = -1
 SEXFAVOR_BOY = NUMFAVOR_1 = 0
@@ -418,7 +420,7 @@ class Bridge(QObject):
     
     @Slot()
     def registerURL(self) -> None:
-        current_file_path = os.path.abspath(__file__)
+        current_file_path = os.path.dirname(sys.executable)
         logger.debug(current_file_path)
         content = f"""Windows Registry Editor Version 5.00
 
@@ -431,7 +433,7 @@ class Bridge(QObject):
 [HKEY_CURRENT_USER\Software\Classes\\namepicker\Shell\Open]
 
 [HKEY_CURRENT_USER\Software\Classes\\namepicker\Shell\Open\command]
-@="{current_file_path.replace("/",r"\\")} noshortcut"
+@="{current_file_path.replace("/",r"\\")+"\\main.exe"} noshortcut"
 """
         with open("file.reg","w",encoding="utf-8") as f:
             f.write(content)

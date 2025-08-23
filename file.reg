@@ -9,4 +9,4 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\namepicker\Shell\Open]
 
 [HKEY_CURRENT_USER\Software\Classes\namepicker\Shell\Open\command]
-@="d:\NamePicker\main.py noshortcut"
+@="D:\NamePicker\.venv\Scripts\main.exe noshortcut"

@@ -452,7 +452,7 @@ FluentPage {
         SettingCard {
             width: parent.width
             title: qsTr("注册URL协议")
-            description: qsTr("注册成功后，即可通过namepicker://调起没有浮窗的NamePicker\n什么你问怎么取消注册？抱歉我没做，自行删除对应的注册表条目即可")
+            description: qsTr("注册后，即可通过namepicker://调起没有浮窗的NamePicker\n什么你问怎么取消注册？抱歉我没做，自行删除对应的注册表条目即可\n请不要擅自移动或重命名主程序，否则会导致协议失效！")
             icon: "ic_fluent_key_reset_20_regular"
             content: Button{
                 text: qsTr("点击注册")
