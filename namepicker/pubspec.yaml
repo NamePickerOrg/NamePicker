@@ -27,3 +27,5 @@ flutter:
     - family: HarmonyOS_Sans_SC
       fonts:
         - asset: fonts/HarmonyOS_Sans_SC_Regular.ttf
+  assets:
+    - assets/

@@ -308,7 +308,7 @@ class AboutPage extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       spacing: 20,
       children: [
-        SafeArea(child: Image.file(File("lib/assets/NamePicker.png"),scale: 2,),),
+        SafeArea(child: Image(image: AssetImage('assets/NamePicker.png',),width: 200,height: 200,)),
         Center(
           child: Text(
             sprintf("NamePicker %s - Codename %s",[version,codename]),

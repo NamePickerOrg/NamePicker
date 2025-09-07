@@ -7,77 +7,36 @@ permissions:
   contents: write
 
 jobs:
-  build_matrix:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    outputs:
-      artiid: ${{ steps.artifact-upload-step.outputs.artifact-id }}
+  build_windows:
+    runs-on: windows-latest
     steps:
-      - name: Check-out repository
+      - name: Clone repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          python-version: '3.12'
-          architecture: 'x64'
-          cache: 'pip'
-          cache-dependency-path: |
-            **/requirements*.txt
+          channel: stable
+          flutter-version-file: pubspec.yaml
+      
+      - run: flutter pub get
 
-      - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install -i https://test.pypi.org/simple/ RinUI --no-deps
+      - name: Build windows app
+        run: flutter build windows
 
-      - name: Build Executable
-        run: |
-          pyinstaller main.spec
-          python post_build.py
-
-      - name: Upload Artifacts
+      - name: Upload windows artifact
         uses: actions/upload-artifact@v4
-        id: artifact-upload-step
         with:
-          name: NamePicker-Action-${{ runner.os }}
+          name: NamePicker-action-windows
           path: |
-            ${{ github.workspace }}/dist/main
-          include-hidden-files: true
-
-  release:
-    needs: [build_matrix]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check-out repository
-        uses: actions/checkout@v4
-      - name: Prepare release
-        run: |
-          mkdir release
-          mkdir artifacts
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+            namepicker\build\windows\x64\runner\Release
+      
+      - name: Build apk
+        run: flutter build apk --release
+      
+      - name: Upload apk artifacts
+        uses: actions/upload-artifact@v4
         with:
-          path: artifacts
-          run-id: ${{needs.build_matrix.outputs.artiid}}
-      - name: Prepare artifacts
-        run: |
-          mv ${{ github.workspace }}/artifacts/NamePicker-Action-Windows release/NamePicker-Action-Windows
-          mv ${{ github.workspace }}/artifacts/NamePicker-Action-Linux release/NamePicker-Action-Linux
-
-      - name: Zip artifact
-        run: |
-          zip -r release/NamePicker-Action-Windows.zip release/NamePicker-Action-Windows
-          zip -r release/NamePicker-Action-Linux.zip release/NamePicker-Action-Linux
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ${{ github.workspace }}/release/NamePicker-Action-Windows.zip
-            ${{ github.workspace }}/release/NamePicker-Action-Linux.zip
-          body_path: CHANGELOG.md
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: NamePicker-action-windows
+          path: |
+            namepicker\build\app\outputs\apk\release\*.apk
