@@ -18,6 +18,8 @@ jobs:
         with:
           channel: stable
       
+      - run: cd namepicker
+
       - run: flutter pub get
 
       - name: Build windows app
@@ -28,7 +30,7 @@ jobs:
         with:
           name: NamePicker-action-windows
           path: |
-            namepicker\build\windows\x64\runner\Release
+            build\windows\x64\runner\Release
       
       - name: Build apk
         run: flutter build apk --release
@@ -38,4 +40,4 @@ jobs:
         with:
           name: NamePicker-action-windows
           path: |
-            namepicker\build\app\outputs\apk\release\*.apk
+            build\app\outputs\apk\release\*.apk
