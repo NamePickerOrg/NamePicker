@@ -17,10 +17,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-      
-      - run: pwd
-
-      - run: ls
 
       - name: Init flutter env
         run: |
@@ -28,21 +24,25 @@ jobs:
           flutter pub get
 
       - name: Build windows app
-        run: flutter build windows
+        run: |
+          cd namepicker
+          flutter build windows
 
       - name: Upload windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: NamePicker-action-windows
           path: |
-            build\windows\x64\runner\Release
+            namepicker\build\windows\x64\runner\Release
       
       - name: Build apk
-        run: flutter build apk --release
+        run: |
+          cd namepicker
+          flutter build apk --release
       
       - name: Upload apk artifacts
         uses: actions/upload-artifact@v4
         with:
           name: NamePicker-action-windows
           path: |
-            build\app\outputs\apk\release\*.apk
+            namepicker\build\app\outputs\apk\release\*.apk
