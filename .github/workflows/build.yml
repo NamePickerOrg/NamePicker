@@ -22,7 +22,10 @@ jobs:
 
       - run: ls
 
-      - run: flutter pub get
+      - name: Init flutter env
+        run: |
+          cd namepicker
+          flutter pub get
 
       - name: Build windows app
         run: flutter build windows
