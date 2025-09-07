@@ -20,6 +20,8 @@ jobs:
       
       - run: cd namepicker
 
+      - run: cd namepicker
+
       - run: flutter pub get
 
       - name: Build windows app
