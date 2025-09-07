@@ -34,15 +34,13 @@ jobs:
           name: NamePicker-action-windows
           path: |
             namepicker\build\windows\x64\runner\Release
-      
-      - name: Build apk
-        run: |
-          cd namepicker
-          flutter build apk --release
-      
-      - name: Upload apk artifacts
-        uses: actions/upload-artifact@v4
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: NamePicker-action-windows
-          path: |
-            namepicker\build\app\outputs\apk\release\*.apk
+          files: |
+            ${{ github.workspace }}\namepicker\build\windows\x64\runner\Release
+          body_path: CHANGELOG.md
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
