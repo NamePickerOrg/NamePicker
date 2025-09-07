@@ -18,9 +18,9 @@ jobs:
         with:
           channel: stable
       
-      - run: cd namepicker
+      - run: pwd
 
-      - run: cd namepicker
+      - run: ls
 
       - run: flutter pub get
 
