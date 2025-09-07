@@ -17,7 +17,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version-file: namepicker/pubspec.yaml
       
       - run: flutter pub get
 
