@@ -11,7 +11,7 @@ import 'settings_card.dart';
 // 众人将与一人离别，惟其人将觐见奇迹
 
 // 「在彩虹桥的尽头，天空之子将缝补晨昏」
-final version = "v3.0.0ea1";
+final version = "v3.0.0ea2";
 final codename = "Hyacine";
 void main() {
   runApp(MyApp());

@@ -38,9 +38,11 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
+          name: "v3.0.0 Early Access 2 - Codename Hyacine"
+          tag_name: "v3.0.0ea2"
           files: |
             ${{ github.workspace }}\namepicker\build\windows\x64\runner\Release
           body_path: CHANGELOG.md
-          draft: true
+          prerelease: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
