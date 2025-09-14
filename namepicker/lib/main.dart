@@ -1,9 +1,11 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sprintf/sprintf.dart';
+import 'settings_card.dart';
 
 // BIN 1 1111 1111 1111 0000 0000 0000 = DEC 33550336
 // 众人将与一人离别，惟其人将觐见奇迹
@@ -20,21 +22,52 @@ randomGen(min, max) {
   return x.floor();
 }
 
+pass(){
+  return Void;
+}
+
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'NamePicker',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 195, 255, 185)),
-          fontFamily: "HarmonyOS_Sans_SC"
-        ),
-        home: MyHomePage(),
+      child: Consumer<MyAppState>(
+        builder: (context, appState, _) {
+          ThemeMode themeMode;
+          switch (appState.themeMode) {
+            case 0:
+              themeMode = ThemeMode.system;
+              break;
+            case 1:
+              themeMode = ThemeMode.light;
+              break;
+            case 2:
+              themeMode = ThemeMode.dark;
+              break;
+            default:
+              themeMode = ThemeMode.system;
+          }
+          return MaterialApp(
+            title: 'NamePicker',
+            theme: ThemeData(
+              useMaterial3: true,
+              useSystemColors: true,
+              fontFamily: "HarmonyOS_Sans_SC",
+              brightness: Brightness.light,
+            ),
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              useSystemColors: true,
+              fontFamily: "HarmonyOS_Sans_SC",
+              brightness: Brightness.dark,
+            ),
+            themeMode: themeMode,
+            home: MyHomePage(),
+          );
+        },
       ),
     );
   }
@@ -46,29 +79,33 @@ class MyAppState extends ChangeNotifier {
 
   GlobalKey? historyListKey;
 
+  // 0: 跟随系统 1: 亮色 2: 暗色
+  int themeMode = 0;
+  int minValue = 0;
+  int maxValue = 20;
+
+  void setThemeMode(int mode) {
+    themeMode = mode;
+    notifyListeners();
+  }
+
   void getNext() {
     history.insert(0, current);
     var animatedList = historyListKey?.currentState as AnimatedListState?;
     // var names = ["sunxiaochuan","fxpick","abcdccb"];
     animatedList?.insertItem(0);
-    current = sprintf("%s",[randomGen(0, 20)]);
+    current = sprintf("%s",[randomGen(minValue, maxValue)]);
     notifyListeners();
   }
 
-  var favorites = <String>[];
-
-  void toggleFavorite([String? pair]) {
-    pair = pair ?? current;
-    if (favorites.contains(pair)) {
-      favorites.remove(pair);
-    } else {
-      favorites.add(pair);
+  void setRange(int min, int max) {
+    if (min > max) {
+      final tmp = min;
+      min = max;
+      max = tmp;
     }
-    notifyListeners();
-  }
-
-  void removeFavorite(String pair) {
-    favorites.remove(pair);
+    minValue = min;
+    maxValue = max;
     notifyListeners();
   }
 }
@@ -197,7 +234,38 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class GeneratorPage extends StatelessWidget {
+class GeneratorPage extends StatefulWidget {
+  @override
+  State<GeneratorPage> createState() => _GeneratorPageState();
+}
+
+class _GeneratorPageState extends State<GeneratorPage> {
+  late TextEditingController minController;
+  late TextEditingController maxController;
+
+  @override
+  void initState() {
+    super.initState();
+    final appState = Provider.of<MyAppState>(context, listen: false);
+    minController = TextEditingController(text: appState.minValue.toString());
+    maxController = TextEditingController(text: appState.maxValue.toString());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appState = Provider.of<MyAppState>(context, listen: false);
+    minController.text = appState.minValue.toString();
+    maxController.text = appState.maxValue.toString();
+  }
+
+  @override
+  void dispose() {
+    minController.dispose();
+    maxController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -213,14 +281,58 @@ class GeneratorPage extends StatelessWidget {
           SizedBox(height: 10),
           BigCard(pair: pair),
           SizedBox(height: 10),
+          // 数字范围选择
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('范围：'),
+              SizedBox(
+                width: 60,
+                child: TextField(
+                  controller: minController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: '最小',
+                  ),
+                  onSubmitted: (v) {
+                    final min = int.tryParse(v) ?? appState.minValue;
+                    appState.setRange(min, appState.maxValue);
+                  },
+                ),
+              ),
+              Text(' ~ '),
+              SizedBox(
+                width: 60,
+                child: TextField(
+                  controller: maxController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: '最大',
+                  ),
+                  onSubmitted: (v) {
+                    final max = int.tryParse(v) ?? appState.maxValue;
+                    appState.setRange(appState.minValue, max);
+                  },
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               ElevatedButton(
                 onPressed: () {
+                  // 先同步输入框内容到状态
+                  final min = int.tryParse(minController.text) ?? appState.minValue;
+                  final max = int.tryParse(maxController.text) ?? appState.maxValue;
+                  appState.setRange(min, max);
                   appState.getNext();
+                  // 保证输入框内容和状态同步
+                  minController.text = appState.minValue.toString();
+                  maxController.text = appState.maxValue.toString();
                 },
-                child: Text('点击抽选喵'),
+                child: Text('点击抽选'),
               ),
             ],
           ),
@@ -290,10 +402,60 @@ class SettingsPage extends StatelessWidget {
     var theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 20,
       children: [
-        Placeholder()
-      ]
+        SizedBox(width: 10,),
+        Text("外观", style: TextStyle(fontSize: 20)),
+        SettingsCard(
+          title: Text("主题模式"),
+          leading: Icon(Icons.brightness_6_outlined),
+          description: "选择亮色、暗色或跟随系统主题",
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Tooltip(
+                message: "跟随系统",
+                child: Row(
+                  children: [
+                    Text("跟随系统"),
+                    Radio<int>(
+                      value: 0,
+                      groupValue: appState.themeMode,
+                      onChanged: (v) => appState.setThemeMode(v!),
+                    ),
+                  ]
+                ),
+              ),
+              Tooltip(
+                message: "亮色",
+                child: Row(
+                  children: [
+                    Text("亮色"),
+                    Radio<int>(
+                      value: 1,
+                      groupValue: appState.themeMode,
+                      onChanged: (v) => appState.setThemeMode(v!),
+                    ),
+                  ]
+                ),
+              ),
+              Tooltip(
+                message: "暗色",
+                child: Row(
+                  children: [
+                    Text("暗色"),
+                    Radio<int>(
+                      value: 2,
+                      groupValue: appState.themeMode,
+                      onChanged: (v) => appState.setThemeMode(v!),
+                    ),
+                  ]
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
