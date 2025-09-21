@@ -16,7 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // 众人将与一人离别，惟其人将觐见奇迹
 
 // 「在彩虹桥的尽头，天空之子将缝补晨昏」
-final version = "v3.0.0ea3";
+final version = "v3.0.0rel";
 final codename = "Hyacine";
 void main() {
   sqfliteFfiInit();
@@ -439,7 +439,6 @@ class SettingsPage extends StatelessWidget {
       spacing: 20,
       children: [
         SizedBox(width: 10,),
-        Text("外观", style: TextStyle(fontSize: 20)),
         SettingsCard(
           title: Text("主题模式"),
           leading: Icon(Icons.brightness_6_outlined),
@@ -528,11 +527,6 @@ class AboutPage extends StatelessWidget {
         ),
         Text(
             "开发者 灵魂歌手er",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: "HarmonyOS_Sans_SC",fontSize: 15,fontWeight: FontWeight.w400),
-        ),
-        Text(
-            "当前版本为Early Access早期体验版本，仅供体验，并非最终品质",
             textAlign: TextAlign.center,
             style: TextStyle(fontFamily: "HarmonyOS_Sans_SC",fontSize: 15,fontWeight: FontWeight.w400),
         ),
