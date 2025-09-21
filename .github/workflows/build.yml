@@ -1,4 +1,4 @@
-name: 构建+发版
+name: 构建
 on:
   push:
   workflow_dispatch:
@@ -31,18 +31,33 @@ jobs:
       - name: Upload windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: NamePicker-action-windows
+          name: NamePicker-Windows-x64
           path: |
             namepicker\build\windows\x64\runner\Release
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
 
-      - name: Release
-        uses: softprops/action-gh-release@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          name: "v3.0.0 Early Access 2 - Codename Hyacine"
-          tag_name: "v3.0.0ea2"
-          files: |
-            ${{ github.workspace }}\namepicker\build\windows\x64\runner\Release
-          body_path: CHANGELOG.md
-          prerelease: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          channel: stable
+
+      - name: Init flutter env
+        run: |
+          cd namepicker
+          flutter pub get
+
+      - name: Build linux app
+        run: |
+          cd namepicker
+          flutter build linux
+
+      - name: Upload linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NamePicker-Linux-x64
+          path: |
+            namepicker\build\linux\x64\runner\Release

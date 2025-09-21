@@ -6,14 +6,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sprintf/sprintf.dart';
 import 'settings_card.dart';
+import 'student_editor.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'student_db.dart';
+import 'student.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // BIN 1 1111 1111 1111 0000 0000 0000 = DEC 33550336
 // 众人将与一人离别，惟其人将觐见奇迹
 
 // 「在彩虹桥的尽头，天空之子将缝补晨昏」
-final version = "v3.0.0ea2";
+final version = "v3.0.0ea3";
 final codename = "Hyacine";
 void main() {
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
   runApp(MyApp());
 }
 
@@ -74,38 +81,118 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = "0";
+  MyAppState() {
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    allowRepeat = prefs.getBool('allowRepeat') ?? true;
+    themeMode = prefs.getInt('themeMode') ?? 0;
+    filterGender = prefs.getString('filterGender') ?? "全部";
+    filterNumberType = prefs.getString('filterNumberType') ?? "全部";
+    notifyListeners();
+  }
+  // 是否允许重复抽取
+  bool allowRepeat = true;
+  // 已抽过学生id列表
+  List<int> pickedIds = [];
+
+  void setAllowRepeat(bool value) {
+    allowRepeat = value;
+    pickedIds.clear();
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setBool('allowRepeat', value);
+    });
+    notifyListeners();
+  }
+  var current = "别紧张...";
   var history = <String>[];
 
   GlobalKey? historyListKey;
 
   // 0: 跟随系统 1: 亮色 2: 暗色
   int themeMode = 0;
-  int minValue = 0;
-  int maxValue = 20;
+
+  // 筛选条件
+  String filterGender = "全部"; // "全部" "男" "女"
+  String filterNumberType = "全部"; // "全部" "单号" "双号"
 
   void setThemeMode(int mode) {
     themeMode = mode;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setInt('themeMode', mode);
+    });
     notifyListeners();
   }
 
-  void getNext() {
+  void setFilterGender(String gender) {
+    filterGender = gender;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('filterGender', gender);
+    });
+    notifyListeners();
+  }
+
+  void setFilterNumberType(String type) {
+    filterNumberType = type;
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('filterNumberType', type);
+    });
+    notifyListeners();
+  }
+
+  Future<void> getNextStudent() async {
+    // 获取所有学生
+    final all = await StudentDatabase.instance.readAll();
+    // 按性别筛选
+    List<Student> filtered = all;
+    if (filterGender != "全部") {
+      filtered = filtered.where((s) => s.gender == filterGender).toList();
+    }
+    // 按学号单双筛选
+    if (filterNumberType != "全部") {
+      filtered = filtered.where((s) {
+        final num = int.tryParse(s.studentId);
+        if (num == null) return false;
+        if (filterNumberType == "单号") return num % 2 == 1;
+        if (filterNumberType == "双号") return num % 2 == 0;
+        return true;
+      }).toList();
+    }
+    // 不允许重复时，过滤已抽过
+    if (!allowRepeat) {
+      filtered = filtered.where((s) => !pickedIds.contains(s.id)).toList();
+      if (filtered.isEmpty && all.isNotEmpty) {
+        // 所有人都抽过，重置
+        pickedIds.clear();
+        filtered = all;
+        if (filterGender != "全部") {
+          filtered = filtered.where((s) => s.gender == filterGender).toList();
+        }
+        if (filterNumberType != "全部") {
+          filtered = filtered.where((s) {
+            final num = int.tryParse(s.studentId);
+            if (num == null) return false;
+            if (filterNumberType == "单号") return num % 2 == 1;
+            if (filterNumberType == "双号") return num % 2 == 0;
+            return true;
+          }).toList();
+        }
+      }
+    }
+    if (filtered.isEmpty) {
+      current = "无符合条件学生";
+    } else {
+      final picked = filtered[Random().nextInt(filtered.length)];
+      current = "${picked.name}（${picked.studentId}）";
+      if (!allowRepeat && picked.id != null) {
+        pickedIds.add(picked.id!);
+      }
+    }
     history.insert(0, current);
     var animatedList = historyListKey?.currentState as AnimatedListState?;
-    // var names = ["sunxiaochuan","fxpick","abcdccb"];
     animatedList?.insertItem(0);
-    current = sprintf("%s",[randomGen(minValue, maxValue)]);
-    notifyListeners();
-  }
-
-  void setRange(int min, int max) {
-    if (min > max) {
-      final tmp = min;
-      min = max;
-      max = tmp;
-    }
-    minValue = min;
-    maxValue = max;
     notifyListeners();
   }
 }
@@ -240,31 +327,7 @@ class GeneratorPage extends StatefulWidget {
 }
 
 class _GeneratorPageState extends State<GeneratorPage> {
-  late TextEditingController minController;
-  late TextEditingController maxController;
-
-  @override
-  void initState() {
-    super.initState();
-    final appState = Provider.of<MyAppState>(context, listen: false);
-    minController = TextEditingController(text: appState.minValue.toString());
-    maxController = TextEditingController(text: appState.maxValue.toString());
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final appState = Provider.of<MyAppState>(context, listen: false);
-    minController.text = appState.minValue.toString();
-    maxController.text = appState.maxValue.toString();
-  }
-
-  @override
-  void dispose() {
-    minController.dispose();
-    maxController.dispose();
-    super.dispose();
-  }
+  // 已移除范围相关控制器和生命周期方法
 
   @override
   Widget build(BuildContext context) {
@@ -281,39 +344,22 @@ class _GeneratorPageState extends State<GeneratorPage> {
           SizedBox(height: 10),
           BigCard(pair: pair),
           SizedBox(height: 10),
-          // 数字范围选择
+          // 筛选选项
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('范围：'),
-              SizedBox(
-                width: 60,
-                child: TextField(
-                  controller: minController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: '最小',
-                  ),
-                  onSubmitted: (v) {
-                    final min = int.tryParse(v) ?? appState.minValue;
-                    appState.setRange(min, appState.maxValue);
-                  },
-                ),
+              Text('性别：'),
+              DropdownButton<String>(
+                value: appState.filterGender,
+                items: ['全部', '男', '女'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+                onChanged: (v) => appState.setFilterGender(v!),
               ),
-              Text(' ~ '),
-              SizedBox(
-                width: 60,
-                child: TextField(
-                  controller: maxController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: '最大',
-                  ),
-                  onSubmitted: (v) {
-                    final max = int.tryParse(v) ?? appState.maxValue;
-                    appState.setRange(appState.minValue, max);
-                  },
-                ),
+              SizedBox(width: 20),
+              Text('学号类型：'),
+              DropdownButton<String>(
+                value: appState.filterNumberType,
+                items: ['全部', '单号', '双号'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                onChanged: (v) => appState.setFilterNumberType(v!),
               ),
             ],
           ),
@@ -322,15 +368,8 @@ class _GeneratorPageState extends State<GeneratorPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ElevatedButton(
-                onPressed: () {
-                  // 先同步输入框内容到状态
-                  final min = int.tryParse(minController.text) ?? appState.minValue;
-                  final max = int.tryParse(maxController.text) ?? appState.maxValue;
-                  appState.setRange(min, max);
-                  appState.getNext();
-                  // 保证输入框内容和状态同步
-                  minController.text = appState.minValue.toString();
-                  maxController.text = appState.maxValue.toString();
+                onPressed: () async {
+                  await appState.getNextStudent();
                 },
                 child: Text('点击抽选'),
               ),
@@ -387,12 +426,7 @@ class NameListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Placeholder()
-      ]
-    );
+    return StudentEditorPage();
   }
 }
 
@@ -453,6 +487,15 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+        SettingsCard(
+          title: Text("允许重复抽取"),
+          leading: Icon(Icons.repeat),
+          description: "关闭后，所有人都抽过才会重置名单",
+          trailing: Switch(
+            value: appState.allowRepeat,
+            onChanged: (v) => appState.setAllowRepeat(v),
           ),
         ),
       ],
@@ -570,3 +613,4 @@ class HistoryCard extends StatelessWidget {
     );
   }
 }
+// 文件结尾处补全所有类的闭合花括号
