@@ -344,7 +344,7 @@ class CustomTitleBar extends StatelessWidget {
         child: Row(
           children: [
             SizedBox(width: 8),
-            Icon(Icons.apps, size: 20),
+            SafeArea(child: Image(image: AssetImage('assets/NamePicker.png',),width: 20,height: 20,)),
             SizedBox(width: 8),
             Text('NamePicker', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             Spacer(),
