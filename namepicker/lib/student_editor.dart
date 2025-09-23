@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'student.dart';
 import 'student_db.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 
 class StudentEditorPage extends StatefulWidget {
   const StudentEditorPage({Key? key}) : super(key: key);
@@ -11,38 +13,11 @@ class StudentEditorPage extends StatefulWidget {
 
 class _StudentEditorPageState extends State<StudentEditorPage> {
   Future<void> _importCsvDialog() async {
-    final controller = TextEditingController();
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('从早期NamePicker版本导入'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('请粘贴CSV内容（使用文本编辑器打开csv文件，复制内容并粘贴即可，需要包含表头）'),
-            SizedBox(height: 8),
-            TextField(
-              controller: controller,
-              minLines: 6,
-              maxLines: 12,
-              decoration: InputDecoration(border: OutlineInputBorder()),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            child: Text('取消'),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-          ElevatedButton(
-            child: Text('导入'),
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
-    );
-    if (result == true && controller.text.trim().isNotEmpty) {
-      final error = await _importCsv(controller.text.trim());
+    FilePickerResult? result = await FilePicker.platform.pickFiles(dialogTitle:"选择早期NamePicker版本的名单文件",type: FileType.custom, allowedExtensions: ['csv']);
+    if (result != null && result.files.single.path != null) {
+      final file = File(result.files.single.path!);
+      final content = await file.readAsString();
+      final error = await _importCsv(content);
       if (error != null) {
         showDialog(
           context: context,
