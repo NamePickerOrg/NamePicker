@@ -1,5 +1,4 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -11,16 +10,24 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'student_db.dart';
 import 'student.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:window_manager/window_manager.dart';
 
 // BIN 1 1111 1111 1111 0000 0000 0000 = DEC 33550336
 // 众人将与一人离别，惟其人将觐见奇迹
 
 // 「在彩虹桥的尽头，天空之子将缝补晨昏」
-final version = "v3.0.0rel";
+final version = "v3.0.0d1rel";
 final codename = "Hyacine";
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
   databaseFactory = databaseFactoryFfi;
+  await windowManager.ensureInitialized();
+  await windowManager.waitUntilReadyToShow();
+  await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+  await windowManager.setSize(const Size(900, 600));
+  await windowManager.setMinimumSize(const Size(600, 400));
+  await windowManager.center();
   runApp(MyApp());
 }
 
@@ -29,10 +36,7 @@ randomGen(min, max) {
   return x.floor();
 }
 
-pass(){
-  return Void;
-}
-
+// 我萤伟大，无需多言
 class MyApp extends StatelessWidget {
 
   const MyApp({super.key});
@@ -238,84 +242,136 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("NamePicker"),
+      body: Column(
+        children: [
+          CustomTitleBar(),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 450) {
+                  return Column(
+                    children: [
+                      Expanded(child: mainArea),
+                      SafeArea(
+                        child: BottomNavigationBar(
+                          items: [
+                            BottomNavigationBarItem(
+                              icon: Icon(Icons.home),
+                              label: '主页',
+                            ),
+                            BottomNavigationBarItem(
+                              icon: Icon(Icons.list),
+                              label: '名单',
+                            ),
+                            BottomNavigationBarItem(
+                              icon: Icon(Icons.settings),
+                              label: '设置',
+                            ),
+                            BottomNavigationBarItem(
+                              icon: Icon(Icons.info),
+                              label: '关于',
+                            ),
+                          ],
+                          currentIndex: selectedIndex,
+                          onTap: (value) {
+                            setState(() {
+                              selectedIndex = value;
+                            });
+                          },
+                        ),
+                      )
+                    ],
+                  );
+                } else {
+                  return Row(
+                    children: [
+                      SafeArea(
+                        child: NavigationRail(
+                          extended: constraints.maxWidth >= 600,
+                          destinations: [
+                            NavigationRailDestination(
+                              icon: Icon(Icons.home),
+                              label: Text("主页"),
+                            ),
+                            NavigationRailDestination(
+                              icon: Icon(Icons.list),
+                              label: Text("名单"),
+                            ),
+                            NavigationRailDestination(
+                              icon: Icon(Icons.settings),
+                              label: Text("设置"),
+                            ),
+                            NavigationRailDestination(
+                              icon: Icon(Icons.info),
+                              label: Text("关于"),
+                            ),
+                          ],
+                          selectedIndex: selectedIndex,
+                          onDestinationSelected: (value) {
+                            setState(() {
+                              selectedIndex = value;
+                            });
+                          },
+                        ),
+                      ),
+                      Expanded(child: mainArea),
+                    ],
+                  );
+                }
+              },
+            ),
+          ),
+        ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth < 450) {
-            // Use a more mobile-friendly layout with BottomNavigationBar
-            // on narrow screens.
-            return Column(
-              children: [
-                Expanded(child: mainArea),
-                SafeArea(
-                  child: BottomNavigationBar(
-                    items: [
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.home),
-                        label: '主页',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.list),
-                        label: '名单',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.settings),
-                        label: '设置',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.info),
-                        label: '关于',
-                      ),
-                    ],
-                    currentIndex: selectedIndex,
-                    onTap: (value) {
-                      setState(() {
-                        selectedIndex = value;
-                      });
-                    },
-                  ),
-                )
-              ],
-            );
-          } else {
-            return Row(
-              children: [
-                SafeArea(
-                  child: NavigationRail(
-                    extended: constraints.maxWidth >= 600,
-                    destinations: [
-                      NavigationRailDestination(
-                        icon: Icon(Icons.home),
-                        label: Text("主页"),
-                      ),
-                      NavigationRailDestination(
-                        icon: Icon(Icons.list),
-                        label: Text("名单"),
-                      ),
-                      NavigationRailDestination(
-                        icon: Icon(Icons.settings),
-                        label: Text("设置"),
-                      ),
-                      NavigationRailDestination(
-                        icon: Icon(Icons.info),
-                        label: Text("关于"),
-                      ),
-                    ],
-                    selectedIndex: selectedIndex,
-                    onDestinationSelected: (value) {
-                      setState(() {
-                        selectedIndex = value;
-                      });
-                    },
-                  ),
-                ),
-                Expanded(child: mainArea),
-              ],
-            );
-          }
-        },
+  );
+  }
+}
+
+class CustomTitleBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onPanStart: (_) {
+        windowManager.startDragging();
+      },
+      child: Container(
+        height: 36,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+        ),
+        child: Row(
+          children: [
+            SizedBox(width: 8),
+            Icon(Icons.apps, size: 20),
+            SizedBox(width: 8),
+            Text('NamePicker', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Spacer(),
+            IconButton(
+              icon: Icon(Icons.minimize, size: 18),
+              tooltip: '最小化',
+              onPressed: () => windowManager.minimize(),
+            ),
+            IconButton(
+              icon: Icon(Icons.crop_square, size: 18),
+              tooltip: '最大化/还原',
+              onPressed: () async {
+                bool isMax = await windowManager.isMaximized();
+                if (isMax) {
+                  await windowManager.unmaximize();
+                } else {
+                  await windowManager.maximize();
+                }
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.close, size: 18),
+              tooltip: '关闭',
+              onPressed: () => windowManager.close(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -505,6 +561,7 @@ class SettingsPage extends StatelessWidget {
 class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // 已经夹私货夹到不知天地为何物了
     var theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
     return Column(
@@ -607,4 +664,4 @@ class HistoryCard extends StatelessWidget {
     );
   }
 }
-// 文件结尾处补全所有类的闭合花括号
+// 成为英雄吧，救世主。

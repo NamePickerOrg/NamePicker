@@ -10,6 +10,85 @@ class StudentEditorPage extends StatefulWidget {
 }
 
 class _StudentEditorPageState extends State<StudentEditorPage> {
+  Future<void> _importCsvDialog() async {
+    final controller = TextEditingController();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('从早期NamePicker版本导入'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('请粘贴CSV内容（使用文本编辑器打开csv文件，复制内容并粘贴即可，需要包含表头）'),
+            SizedBox(height: 8),
+            TextField(
+              controller: controller,
+              minLines: 6,
+              maxLines: 12,
+              decoration: InputDecoration(border: OutlineInputBorder()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: Text('取消'),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          ElevatedButton(
+            child: Text('导入'),
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      ),
+    );
+    if (result == true && controller.text.trim().isNotEmpty) {
+      final error = await _importCsv(controller.text.trim());
+      if (error != null) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('导入失败'),
+            content: Text(error),
+            actions: [TextButton(child: Text('确定'), onPressed: () => Navigator.of(ctx).pop())],
+          ),
+        );
+      } else {
+        await _loadStudents();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导入完成')));
+      }
+    }
+  }
+
+  Future<String?> _importCsv(String csvText) async {
+    final lines = csvText.split(RegExp(r'\r?\n'));
+    if (lines.isEmpty || lines.length < 2) {
+      return '内容为空或没有数据行。';
+    }
+    final header = lines.first.trim().toLowerCase();
+    if (!(header.contains('name') && header.contains('sex') && header.contains('no'))) {
+      return '首行必须包含字段：name,sex,no';
+    }
+    for (var i = 1; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+      final parts = line.split(',');
+      if (parts.length < 3) {
+        return '第${i+1}行字段数量不足（应为3个，用英文逗号分隔）';
+      }
+      final name = parts[0].trim();
+      final sexRaw = parts[1].trim();
+      final no = parts[2].trim();
+      if (name.isEmpty || no.isEmpty) {
+        return '第${i+1}行姓名或学号为空';
+      }
+      String gender = '男';
+      if (sexRaw == '1') gender = '女';
+      // 其他值视为男
+      final student = Student(name: name, gender: gender, studentId: no);
+      await StudentDatabase.instance.create(student);
+    }
+    return null;
+  }
   List<Student> students = [];
   bool loading = true;
 
@@ -48,7 +127,7 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text('名单编辑器')),
+      // appBar: AppBar(title: Text('名单编辑器')),
       body: Container(
         color: colorScheme.surfaceContainer,
         child: loading
@@ -77,10 +156,21 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
                 },
               ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _addOrEditStudent(),
-        child: Icon(Icons.add),
-        tooltip: '添加学生',
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            onPressed: () => _addOrEditStudent(),
+            child: Icon(Icons.add),
+            tooltip: '添加学生',
+          ),
+          SizedBox(height: 12),
+          FloatingActionButton(
+            onPressed: _importCsvDialog,
+            child: Icon(Icons.upload_file),
+            tooltip: '从早期NamePicker版本导入',
+          ),
+        ],
       ),
     );
   }
