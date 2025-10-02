@@ -24,48 +24,82 @@ class SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
       ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
-        child: Padding(
-          padding: padding ?? const EdgeInsets.all(16),
+        hoverColor: colorScheme.primary.withOpacity(0.06),
+        splashColor: colorScheme.primary.withOpacity(0.10),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainer,
+            border: Border.all(color: colorScheme.outlineVariant, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withOpacity(0.04),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (leading != null) ...[
-                leading!,
-                const SizedBox(width: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: leading!,
+                ),
+                const SizedBox(width: 18),
               ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    title,
+                    DefaultTextStyle(
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.w600),
+                      child: title,
+                    ),
                     if (subtitle != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 10),
                       DefaultTextStyle(
-                        style: Theme.of(context).textTheme.bodySmall!,
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(color: colorScheme.onSurfaceVariant),
                         child: subtitle!,
                       ),
                     ],
                     if (description != null && description!.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 1),
+                      Divider(height: 20, thickness: 1, color: colorScheme.outlineVariant),
                       Text(
                         description!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ],
                 ),
               ),
               if (trailing != null) ...[
-                const SizedBox(width: 16),
-                trailing!,
+                const SizedBox(width: 18),
+                Container(
+                  // decoration: BoxDecoration(
+                  //   color: colorScheme.secondaryContainer.withOpacity(0.7),
+                  //   borderRadius: BorderRadius.circular(10),
+                  // ),
+                  padding: const EdgeInsets.all(8),
+                  child: trailing!,
+                ),
               ],
             ],
           ),

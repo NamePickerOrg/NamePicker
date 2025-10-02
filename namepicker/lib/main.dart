@@ -330,33 +330,66 @@ class _MyHomePageState extends State<MyHomePage> {
 class CustomTitleBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onPanStart: (_) {
         windowManager.startDragging();
       },
       child: Container(
-        height: 36,
+        height: 40,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          border: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
+          gradient: LinearGradient(
+            colors: [
+              colorScheme.surfaceContainerHighest.withOpacity(0.95),
+              colorScheme.primary.withOpacity(0.08),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border(bottom: BorderSide(color: colorScheme.outlineVariant, width: 1)),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withOpacity(0.08),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            SizedBox(width: 8),
-            SafeArea(child: Image(image: AssetImage('assets/NamePicker.png',),width: 20,height: 20,)),
-            SizedBox(width: 8),
-            Text('NamePicker', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            Spacer(),
-            IconButton(
-              icon: Icon(Icons.minimize, size: 18),
-              tooltip: '最小化',
-              onPressed: () => windowManager.minimize(),
+            SizedBox(width: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.asset('assets/NamePicker.png', width: 28, height: 28),
             ),
-            IconButton(
-              icon: Icon(Icons.crop_square, size: 18),
+            SizedBox(width: 10),
+            Text(
+              'NamePicker',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                fontFamily: "HarmonyOS_Sans_SC",
+                color: colorScheme.primary,
+                letterSpacing: 1.2,
+              ),
+            ),
+            SizedBox(width: 8),
+            Container(
+              width: 1, height: 20,
+              color: colorScheme.outlineVariant,
+            ),
+            Spacer(),
+            _TitleBarButton(
+              icon: Icons.minimize,
+              tooltip: '最小化',
+              onTap: () => windowManager.minimize(),
+              color: colorScheme.onSurfaceVariant,
+            ),
+            _TitleBarButton(
+              icon: Icons.crop_square,
               tooltip: '最大化/还原',
-              onPressed: () async {
+              onTap: () async {
                 bool isMax = await windowManager.isMaximized();
                 if (isMax) {
                   await windowManager.unmaximize();
@@ -364,13 +397,61 @@ class CustomTitleBar extends StatelessWidget {
                   await windowManager.maximize();
                 }
               },
+              color: colorScheme.onSurfaceVariant,
             ),
-            IconButton(
-              icon: Icon(Icons.close, size: 18),
+            _TitleBarButton(
+              icon: Icons.close,
               tooltip: '关闭',
-              onPressed: () => windowManager.close(),
+              onTap: () => windowManager.close(),
+              color: colorScheme.error,
+              hoverColor: colorScheme.errorContainer,
             ),
+            SizedBox(width: 8),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TitleBarButton extends StatefulWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final Color color;
+  final Color? hoverColor;
+  const _TitleBarButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    required this.color,
+    this.hoverColor,
+  });
+
+  @override
+  State<_TitleBarButton> createState() => _TitleBarButtonState();
+}
+
+class _TitleBarButtonState extends State<_TitleBarButton> {
+  bool _hovering = false;
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: _hovering
+                ? (widget.hoverColor ?? Theme.of(context).colorScheme.primary.withOpacity(0.08))
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          width: 32,
+          height: 32,
+          child: Icon(widget.icon, size: 18, color: widget.color),
         ),
       ),
     );
@@ -492,7 +573,7 @@ class SettingsPage extends StatelessWidget {
     var theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
     return Column(
-      spacing: 20,
+      spacing: 5,
       children: [
         SizedBox(width: 10,),
         SettingsCard(
@@ -561,33 +642,82 @@ class SettingsPage extends StatelessWidget {
 class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // 已经夹私货夹到不知天地为何物了
-    var theme = Theme.of(context);
-    var appState = context.watch<MyAppState>();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 20,
-      children: [
-        SafeArea(child: Image(image: AssetImage('assets/NamePicker.png',),width: 200,height: 200,)),
-        Center(
-          child: Text(
-            sprintf("NamePicker %s - Codename %s",[version,codename]),
-            textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: "HarmonyOS_Sans_SC",fontSize: 20,fontWeight: FontWeight.w600),
-          )
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            color: colorScheme.surfaceContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset('assets/NamePicker.png', width: 120, height: 120),
+                  ),
+                  SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.apps, color: colorScheme.primary, size: 28),
+                      SizedBox(width: 8),
+                      Text(
+                        sprintf("NamePicker %s", [version]),
+                        style: TextStyle(fontFamily: "HarmonyOS_Sans_SC", fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Codename $codename',
+                    style: TextStyle(fontFamily: "HarmonyOS_Sans_SC", fontSize: 15, color: colorScheme.onSurfaceVariant),
+                  ),
+                  SizedBox(height: 16),
+                  Divider(height: 32, thickness: 1, color: colorScheme.outlineVariant),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      "「云间城邦随岁月离析，昏光庭院再度敞开门扉，为永夜捎来微光」",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: "HarmonyOS_Sans_SC", fontSize: 16, fontWeight: FontWeight.w400, color: colorScheme.primary),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: colorScheme.primaryContainer,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Image.asset('assets/avaters/lhgser.jpg', width: 60, height: 60),
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        "开发者 灵魂歌手er",
+                        style: TextStyle(fontFamily: "HarmonyOS_Sans_SC", fontSize: 16, fontWeight: FontWeight.w500, color: colorScheme.onSurface),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    "© 2022-2025 NamePickerOrg",
+                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        Text(
-            "「云间城邦随岁月离析，昏光庭院再度敞开门扉，为永夜捎来微光」",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: "HarmonyOS_Sans_SC",fontSize: 15,fontWeight: FontWeight.w400),
-        ),
-        Text(
-            "开发者 灵魂歌手er",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontFamily: "HarmonyOS_Sans_SC",fontSize: 15,fontWeight: FontWeight.w400),
-        ),
-      ]
+      ),
     );
   }
 }
