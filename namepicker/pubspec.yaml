@@ -21,6 +21,7 @@ dependencies:
   shared_preferences: ^2.2.2
   window_manager: ^0.3.7
   file_picker: any
+  url_launcher: any
 
 dev_dependencies:
   flutter_test:

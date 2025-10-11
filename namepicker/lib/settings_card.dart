@@ -49,7 +49,7 @@ class SettingsCard extends StatelessWidget {
               ),
             ],
           ),
-          padding: padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          padding: padding ?? const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -59,10 +59,10 @@ class SettingsCard extends StatelessWidget {
                     color: colorScheme.primaryContainer.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   child: leading!,
                 ),
-                const SizedBox(width: 18),
+                const SizedBox(width: 6),
               ],
               Expanded(
                 child: Column(
@@ -80,8 +80,8 @@ class SettingsCard extends StatelessWidget {
                       ),
                     ],
                     if (description != null && description!.isNotEmpty) ...[
-                      const SizedBox(height: 1),
-                      Divider(height: 20, thickness: 1, color: colorScheme.outlineVariant),
+                      // const SizedBox(height: 1),
+                      // Divider(height: 20, thickness: 1, color: colorScheme.outlineVariant),
                       Text(
                         description!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.w500),
