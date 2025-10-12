@@ -17,7 +17,7 @@ import 'package:url_launcher/url_launcher.dart';
 // 众人将与一人离别，惟其人将觐见奇迹
 
 // 「在彩虹桥的尽头，天空之子将缝补晨昏」
-final version = "v3.0.0d1rel";
+final version = "v3.0.0fin";
 final codename = "Hyacine";
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -342,8 +342,8 @@ class CustomTitleBar extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              colorScheme.surfaceContainerHighest.withOpacity(0.95),
-              colorScheme.primary.withOpacity(0.08),
+              colorScheme.surfaceContainerHighest.withValues(alpha:0.95),
+              colorScheme.primary.withValues(alpha:0.08),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -351,7 +351,7 @@ class CustomTitleBar extends StatelessWidget {
           border: Border(bottom: BorderSide(color: colorScheme.outlineVariant, width: 1)),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withOpacity(0.08),
+              color: colorScheme.shadow.withValues(alpha:0.08),
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -446,7 +446,7 @@ class _TitleBarButtonState extends State<_TitleBarButton> {
           margin: EdgeInsets.symmetric(horizontal: 2),
           decoration: BoxDecoration(
             color: _hovering
-                ? (widget.hoverColor ?? Theme.of(context).colorScheme.primary.withOpacity(0.08))
+                ? (widget.hoverColor ?? Theme.of(context).colorScheme.primary..withValues(alpha:0.08))
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),
