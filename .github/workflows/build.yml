@@ -34,30 +34,35 @@ jobs:
           name: NamePicker-Windows-x64
           path: |
             namepicker\build\windows\x64\runner\Release
-  # build_linux:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Clone repository
-  #       uses: actions/checkout@v4
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
 
-  #     - name: Set up Flutter
-  #       uses: subosito/flutter-action@v2
-  #       with:
-  #         channel: stable
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
 
-  #     - name: Init flutter env
-  #       run: |
-  #         cd namepicker
-  #         flutter pub get
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
 
-  #     - name: Build linux app
-  #       run: |
-  #         cd namepicker
-  #         flutter build linux
+      - name: Init flutter env
+        run: |
+          cd namepicker
+          flutter pub get
 
-  #     - name: Upload linux artifact
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: NamePicker-Linux-x64
-  #         path: |
-  #           namepicker\build\linux\x64\runner\Release
+      - name: Build linux app
+        run: |
+          cd namepicker
+          flutter build linux
+
+      - name: Upload linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NamePicker-Linux-x64
+          path: |
+            namepicker/build/linux/x64/release/bundle
