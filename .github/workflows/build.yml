@@ -87,7 +87,7 @@ jobs:
         with:
           name: NamePicker-Linux-deb
           path: |
-            namepicker/namepicker_*_amd64.deb
+            namepicker_*_amd64.deb
   build_macos_intel:
     runs-on: macos-13
     steps:
@@ -113,7 +113,7 @@ jobs:
         run: |
           cd namepicker/build/macos/Build/Products/Release
           APP_DIR=$(ls -d *.app | head -n 1)
-          ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "../../../${APP_DIR%.app}-macOS-x64.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "./${APP_DIR%.app}-macOS-x64.zip"
 
       - name: Upload macOS x64 artifact
         uses: actions/upload-artifact@v4
@@ -147,7 +147,7 @@ jobs:
         run: |
           cd namepicker/build/macos/Build/Products/Release
           APP_DIR=$(ls -d *.app | head -n 1)
-          ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "../../../${APP_DIR%.app}-macOS-arm64.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "./${APP_DIR%.app}-macOS-arm64.zip"
 
       - name: Upload macOS arm64 artifact
         uses: actions/upload-artifact@v4
