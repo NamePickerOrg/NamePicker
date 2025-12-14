@@ -60,9 +60,98 @@ jobs:
           cd namepicker
           flutter build linux
 
+      - name: Package linux deb
+        run: |
+          cd namepicker
+          APP_VERSION=$(grep -E '^version:' pubspec.yaml | awk '{print $2}')
+          DEB_VERSION=${APP_VERSION//+/-}
+          PKG_DIR=../deb_build
+          mkdir -p "$PKG_DIR/DEBIAN"
+          mkdir -p "$PKG_DIR/opt/namepicker"
+          mkdir -p "$PKG_DIR/usr/bin"
+          cp -r build/linux/x64/release/bundle/* "$PKG_DIR/opt/namepicker/"
+          printf "Package: namepicker\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nMaintainer: NamePicker Maintainers <noreply@example.com>\nDepends: libgtk-3-0\nDescription: NamePicker Flutter application\n" "$DEB_VERSION" > "$PKG_DIR/DEBIAN/control"
+          printf '#!/bin/sh\nexec /opt/namepicker/namepicker "$@"\n' > "$PKG_DIR/usr/bin/namepicker"
+          chmod 755 "$PKG_DIR/usr/bin/namepicker"
+          dpkg-deb --build "$PKG_DIR" "../namepicker_${DEB_VERSION}_amd64.deb"
+
       - name: Upload linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: NamePicker-Linux-x64
           path: |
             namepicker/build/linux/x64/release/bundle
+
+      - name: Upload linux deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: NamePicker-Linux-deb
+          path: |
+            namepicker_*_amd64.deb
+  build_macos_intel:
+    runs-on: macos-13
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Init flutter env
+        run: |
+          cd namepicker
+          flutter pub get
+
+      - name: Build macOS x64 app
+        run: |
+          cd namepicker
+          flutter build macos --release
+
+      - name: Package macOS x64 zip
+        run: |
+          cd namepicker/build/macos/Build/Products/Release
+          APP_DIR=$(ls -d *.app | head -n 1)
+          ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "./${APP_DIR%.app}-macOS-x64.zip"
+
+      - name: Upload macOS x64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NamePicker-macOS-x64
+          path: |
+            namepicker/build/macos/Build/Products/Release/*-macOS-x64.zip
+
+  build_macos_arm:
+    runs-on: macos-14
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Init flutter env
+        run: |
+          cd namepicker
+          flutter pub get
+
+      - name: Build macOS arm64 app
+        run: |
+          cd namepicker
+          flutter build macos --release
+
+      - name: Package macOS arm64 zip
+        run: |
+          cd namepicker/build/macos/Build/Products/Release
+          APP_DIR=$(ls -d *.app | head -n 1)
+          ditto -c -k --sequesterRsrc --keepParent "$APP_DIR" "./${APP_DIR%.app}-macOS-arm64.zip"
+
+      - name: Upload macOS arm64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NamePicker-macOS-arm64
+          path: |
+            namepicker/build/macos/Build/Products/Release/*-macOS-arm64.zip

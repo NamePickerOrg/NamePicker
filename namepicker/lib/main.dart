@@ -25,7 +25,11 @@ Future<void> main() async {
   databaseFactory = databaseFactoryFfi;
   await windowManager.ensureInitialized();
   await windowManager.waitUntilReadyToShow();
-  await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+  if (Platform.isMacOS) {
+    await windowManager.setTitleBarStyle(TitleBarStyle.normal);
+  } else {
+    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+  }
   await windowManager.setSize(const Size(900, 600));
   await windowManager.setMinimumSize(const Size(600, 400));
   await windowManager.center();
@@ -245,7 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       body: Column(
         children: [
-          CustomTitleBar(),
+          if (!Platform.isMacOS) CustomTitleBar(),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
