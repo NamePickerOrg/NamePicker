@@ -131,21 +131,39 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
                 },
               ),
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton(
-            onPressed: () => _addOrEditStudent(),
-            child: Icon(Icons.add),
-            tooltip: '添加学生',
-          ),
-          SizedBox(height: 12),
-          FloatingActionButton(
-            onPressed: _importCsvDialog,
-            child: Icon(Icons.upload_file),
-            tooltip: '从早期NamePicker版本导入',
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final selected = await showModalBottomSheet<String>(
+            context: context,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            builder: (ctx) => SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.add),
+                    title: Text('添加学生'),
+                    onTap: () => Navigator.of(ctx).pop('add'),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.upload_file),
+                    title: Text('导入名单'),
+                    onTap: () => Navigator.of(ctx).pop('import'),
+                  ),
+                ],
+              ),
+            ),
+          );
+          if (selected == 'add') {
+            _addOrEditStudent();
+          } else if (selected == 'import') {
+            _importCsvDialog();
+          }
+        },
+        child: Icon(Icons.add),
+        tooltip: '操作',
       ),
     );
   }

@@ -1,16 +1,18 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-import 'dart:io';
+import 'dart:io' show Platform;
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sprintf/sprintf.dart';
 import 'settings_card.dart';
 import 'student_editor.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+// 仅桌面平台需要 sqflite_common_ffi
+import 'package:sqflite_common_ffi/sqflite_ffi.dart' if (dart.library.io) 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'student_db.dart';
 import 'student.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:window_manager/window_manager.dart';
+// 仅桌面平台需要 window_manager
+import 'package:window_manager/window_manager.dart' if (dart.library.io) 'package:window_manager/window_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // BIN 1 1111 1111 1111 0000 0000 0000 = DEC 33550336
@@ -21,18 +23,21 @@ final version = "v3.0.0fin";
 final codename = "Hyacine";
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
-  await windowManager.ensureInitialized();
-  await windowManager.waitUntilReadyToShow();
-  if (Platform.isMacOS) {
-    await windowManager.setTitleBarStyle(TitleBarStyle.normal);
-  } else {
-    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+  // 桌面平台初始化 sqflite_ffi 和 window_manager
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    await windowManager.ensureInitialized();
+    await windowManager.waitUntilReadyToShow();
+    if (Platform.isMacOS) {
+      await windowManager.setTitleBarStyle(TitleBarStyle.normal);
+    } else {
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    }
+    await windowManager.setSize(const Size(900, 600));
+    await windowManager.setMinimumSize(const Size(600, 400));
+    await windowManager.center();
   }
-  await windowManager.setSize(const Size(900, 600));
-  await windowManager.setMinimumSize(const Size(600, 400));
-  await windowManager.center();
   runApp(MyApp());
 }
 
@@ -249,17 +254,19 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       body: Column(
         children: [
-          if (!Platform.isMacOS) CustomTitleBar(),
+          if (!Platform.isMacOS&!Platform.isAndroid) CustomTitleBar(),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
                 if (constraints.maxWidth < 450) {
+                  final colorScheme = Theme.of(context).colorScheme;
                   return Column(
                     children: [
                       Expanded(child: mainArea),
-                      SafeArea(
+                      Material(
+                        color: colorScheme.surface,
                         child: BottomNavigationBar(
-                          items: [
+                          items: const [
                             BottomNavigationBarItem(
                               icon: Icon(Icons.home),
                               label: '主页',
@@ -283,6 +290,11 @@ class _MyHomePageState extends State<MyHomePage> {
                               selectedIndex = value;
                             });
                           },
+                          backgroundColor: colorScheme.surface,
+                          selectedItemColor: colorScheme.primary,
+                          unselectedItemColor: colorScheme.onSurface.withOpacity(0.7),
+                          type: BottomNavigationBarType.fixed,
+                          elevation: 8,
                         ),
                       )
                     ],
@@ -484,7 +496,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: 10),
+            SizedBox(height: 30),
             // 抽选结果列表（修复overflow，限制最大高度并可滚动）
             Card(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -680,54 +692,30 @@ class SettingsPage extends StatelessWidget {
     return Column(
       spacing: 3,
       children: [
+        Container(
+          padding: const EdgeInsets.only(left: 20, top: 32, bottom: 12),
+          alignment: Alignment.centerLeft,
+          child: Text(
+            '设置',
+            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.left,
+          ),
+        ),
         SizedBox(width: 10,),
         SettingsCard(
           title: Text("主题模式"),
           leading: Icon(Icons.brightness_6_outlined),
           description: "选择亮色、暗色或跟随系统主题",
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Tooltip(
-                message: "跟随系统",
-                child: Row(
-                  children: [
-                    Text("跟随系统"),
-                    Radio<int>(
-                      value: 0,
-                      groupValue: appState.themeMode,
-                      onChanged: (v) => appState.setThemeMode(v!),
-                    ),
-                  ]
-                ),
-              ),
-              Tooltip(
-                message: "亮色",
-                child: Row(
-                  children: [
-                    Text("亮色"),
-                    Radio<int>(
-                      value: 1,
-                      groupValue: appState.themeMode,
-                      onChanged: (v) => appState.setThemeMode(v!),
-                    ),
-                  ]
-                ),
-              ),
-              Tooltip(
-                message: "暗色",
-                child: Row(
-                  children: [
-                    Text("暗色"),
-                    Radio<int>(
-                      value: 2,
-                      groupValue: appState.themeMode,
-                      onChanged: (v) => appState.setThemeMode(v!),
-                    ),
-                  ]
-                ),
-              ),
+          trailing: DropdownButton<int>(
+            value: appState.themeMode,
+            items: const [
+              DropdownMenuItem(value: 0, child: Text("跟随系统")),
+              DropdownMenuItem(value: 1, child: Text("亮色")),
+              DropdownMenuItem(value: 2, child: Text("暗色")),
             ],
+            onChanged: (v) {
+              if (v != null) appState.setThemeMode(v);
+            },
           ),
         ),
         SettingsCard(
