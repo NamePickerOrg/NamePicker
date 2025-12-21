@@ -2,6 +2,10 @@ name: 构建
 on:
   push:
   workflow_dispatch:
+    inputs:
+      version:
+        description: '发布版本号（如 v3.0.0）'
+        required: true
 
 permissions:
   contents: write
@@ -155,3 +159,52 @@ jobs:
           name: NamePicker-macOS-arm64
           path: |
             namepicker/build/macos/Build/Products/Release/*-macOS-arm64.zip
+            
+  build_android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Init flutter env
+        run: |
+          cd namepicker
+          flutter pub get
+
+      - name: Build APK
+        run: |
+          cd namepicker
+          flutter build apk --release
+
+      - name: Upload android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NamePicker-Android-APK
+          path: namepicker/build/app/outputs/flutter-apk/app-release.apk
+
+  release:
+    needs: [build_windows, build_linux, build_macos_intel, build_macos_arm, build_android]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: NamePicker ${{ github.event.inputs.version }}
+          body_path: CHANGELOG.md
+          files: |
+            artifacts/**/*

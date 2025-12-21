@@ -30,7 +30,14 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
 
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  
 flutter:
   uses-material-design: true
   fonts:
