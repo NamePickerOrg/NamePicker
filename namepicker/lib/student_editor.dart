@@ -3,6 +3,9 @@ import 'student.dart';
 import 'student_db.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class StudentEditorPage extends StatefulWidget {
   const StudentEditorPage({Key? key}) : super(key: key);
@@ -12,6 +15,45 @@ class StudentEditorPage extends StatefulWidget {
 }
 
 class _StudentEditorPageState extends State<StudentEditorPage> {
+  Future<void> _exportCsvDialog() async {
+    // 构造csv内容
+    final buffer = StringBuffer();
+    buffer.writeln('name,sex,no');
+    for (final s in students) {
+      final sexRaw = s.gender == '女' ? '1' : '0';
+      buffer.writeln('${s.name},${sexRaw},${s.studentId}');
+    }
+    if (kIsWeb) {
+      // web端暂不支持
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Web端暂不支持导出')));
+      return;
+    }
+    if (Platform.isAndroid) {
+      // 安卓端强制保存到系统下载文件夹
+      final dir = '/storage/emulated/0/Download';
+      final file = File('$dir/namepicker.csv');
+      await file.writeAsString(buffer.toString(), flush: true);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导出完成: $dir/namepicker.csv')));
+    } else {
+      // 桌面端用FilePicker
+      String? outputPath;
+      try {
+        outputPath = await FilePicker.platform.saveFile(
+          dialogTitle: '导出名单为CSV',
+          fileName: 'namepicker.csv',
+          type: FileType.custom,
+          allowedExtensions: ['csv'],
+        );
+      } catch (e) {
+        outputPath = null;
+      }
+      if (outputPath != null) {
+        final file = File(outputPath);
+        await file.writeAsString(buffer.toString(), flush: true);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('导出完成: $outputPath')));
+      }
+    }
+  }
   Future<void> _importCsvDialog() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(dialogTitle:"选择早期NamePicker版本的名单文件",type: FileType.custom, allowedExtensions: ['csv']);
     if (result != null && result.files.single.path != null) {
@@ -152,6 +194,11 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
                     title: Text('导入名单'),
                     onTap: () => Navigator.of(ctx).pop('import'),
                   ),
+                  ListTile(
+                    leading: Icon(Icons.download),
+                    title: Text('导出名单'),
+                    onTap: () => Navigator.of(ctx).pop('export'),
+                  ),
                 ],
               ),
             ),
@@ -160,6 +207,8 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
             _addOrEditStudent();
           } else if (selected == 'import') {
             _importCsvDialog();
+          } else if (selected == 'export') {
+            _exportCsvDialog();
           }
         },
         child: Icon(Icons.add),
