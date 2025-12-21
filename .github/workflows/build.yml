@@ -89,7 +89,7 @@ jobs:
           path: |
             namepicker_*_amd64.deb
   build_macos_intel:
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
@@ -123,7 +123,7 @@ jobs:
             namepicker/build/macos/Build/Products/Release/*-macOS-x64.zip
 
   build_macos_arm:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
