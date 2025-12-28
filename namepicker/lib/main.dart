@@ -7,20 +7,22 @@ import 'package:sprintf/sprintf.dart';
 import 'settings_card.dart';
 import 'student_editor.dart';
 // 仅桌面平台需要 sqflite_common_ffi
-import 'package:sqflite_common_ffi/sqflite_ffi.dart' if (dart.library.io) 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'
+    if (dart.library.io) 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'student_db.dart';
 import 'student.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // 仅桌面平台需要 window_manager
-import 'package:window_manager/window_manager.dart' if (dart.library.io) 'package:window_manager/window_manager.dart';
+import 'package:window_manager/window_manager.dart'
+    if (dart.library.io) 'package:window_manager/window_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // BIN 1 1111 1111 1111 0000 0000 0000 = DEC 33550336
 // 众人将与一人离别，惟其人将觐见奇迹
 
 // 「在彩虹桥的尽头，天空之子将缝补晨昏」
-final version = "v3.0.0fin";
-final codename = "Hyacine";
+final version = "v3.1.0";
+final codename = "SilverWolf";
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // 桌面平台初始化 sqflite_ffi 和 window_manager
@@ -48,7 +50,6 @@ randomGen(min, max) {
 
 // 我萤伟大，无需多言
 class MyApp extends StatelessWidget {
-
   const MyApp({super.key});
 
   @override
@@ -97,6 +98,28 @@ class MyApp extends StatelessWidget {
 class MyAppState extends ChangeNotifier {
   MyAppState() {
     _loadSettings();
+    _initLists();
+  }
+
+  // 多名单支持
+  List<ListGroup> lists = [];
+  int? currentListId;
+
+  Future<void> _initLists() async {
+    lists = await StudentDatabase.instance.readAllLists();
+    if (lists.isEmpty) {
+      int id = await StudentDatabase.instance.createList('默认名单');
+      lists = await StudentDatabase.instance.readAllLists();
+      currentListId = id;
+    } else {
+      currentListId = lists.first.id;
+    }
+    notifyListeners();
+  }
+
+  void setCurrentListId(int? id) {
+    currentListId = id;
+    notifyListeners();
   }
 
   Future<void> _loadSettings() async {
@@ -107,6 +130,7 @@ class MyAppState extends ChangeNotifier {
     filterNumberType = prefs.getString('filterNumberType') ?? "全部";
     notifyListeners();
   }
+
   // 是否允许重复抽取
   bool allowRepeat = true;
   // 已抽过学生id列表
@@ -120,6 +144,7 @@ class MyAppState extends ChangeNotifier {
     });
     notifyListeners();
   }
+
   var current = "别紧张...";
   var history = <String>[];
 
@@ -157,8 +182,13 @@ class MyAppState extends ChangeNotifier {
   }
 
   Future<void> getNextStudent() async {
-    // 获取所有学生
-    final all = await StudentDatabase.instance.readAll();
+    // 获取当前名单下所有学生
+    if (currentListId == null) {
+      current = "请先选择名单";
+      notifyListeners();
+      return;
+    }
+    final all = await StudentDatabase.instance.readAll(currentListId!);
     // 按性别筛选
     List<Student> filtered = all;
     if (filterGender != "全部") {
@@ -254,7 +284,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       body: Column(
         children: [
-          if (!Platform.isMacOS&!Platform.isAndroid) CustomTitleBar(),
+          if (!Platform.isMacOS & !Platform.isAndroid) CustomTitleBar(),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -292,11 +322,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           },
                           backgroundColor: colorScheme.surface,
                           selectedItemColor: colorScheme.primary,
-                          unselectedItemColor: colorScheme.onSurface.withOpacity(0.7),
+                          unselectedItemColor: colorScheme.onSurface
+                              .withOpacity(0.7),
                           type: BottomNavigationBarType.fixed,
                           elevation: 8,
                         ),
-                      )
+                      ),
                     ],
                   );
                 } else {
@@ -340,7 +371,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-  );
+    );
   }
 }
 
@@ -358,16 +389,18 @@ class CustomTitleBar extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              colorScheme.surfaceContainerHighest.withValues(alpha:0.95),
-              colorScheme.primary.withValues(alpha:0.08),
+              colorScheme.surfaceContainerHighest.withValues(alpha: 0.95),
+              colorScheme.primary.withValues(alpha: 0.08),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          border: Border(bottom: BorderSide(color: colorScheme.outlineVariant, width: 1)),
+          border: Border(
+            bottom: BorderSide(color: colorScheme.outlineVariant, width: 1),
+          ),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.shadow.withValues(alpha:0.08),
+              color: colorScheme.shadow.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -378,7 +411,11 @@ class CustomTitleBar extends StatelessWidget {
             SizedBox(width: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
-              child: Image.asset('assets/NamePicker.png', width: 28, height: 28),
+              child: Image.asset(
+                'assets/NamePicker.png',
+                width: 28,
+                height: 28,
+              ),
             ),
             SizedBox(width: 10),
             Text(
@@ -392,10 +429,7 @@ class CustomTitleBar extends StatelessWidget {
               ),
             ),
             SizedBox(width: 8),
-            Container(
-              width: 1, height: 20,
-              color: colorScheme.outlineVariant,
-            ),
+            Container(width: 1, height: 20, color: colorScheme.outlineVariant),
             Spacer(),
             _TitleBarButton(
               icon: Icons.minimize,
@@ -462,7 +496,8 @@ class _TitleBarButtonState extends State<_TitleBarButton> {
           margin: EdgeInsets.symmetric(horizontal: 2),
           decoration: BoxDecoration(
             color: _hovering
-                ? (widget.hoverColor ?? Theme.of(context).colorScheme.primary..withValues(alpha:0.08))
+                ? (widget.hoverColor ?? Theme.of(context).colorScheme.primary
+                    ..withValues(alpha: 0.08))
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),
@@ -481,155 +516,259 @@ class GeneratorPage extends StatefulWidget {
 }
 
 class _GeneratorPageState extends State<GeneratorPage> {
-  // 已移除范围相关控制器和生命周期方法
-
   int _pickCount = 1;
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    // 展示最近抽选的结果列表（取前N条）
     final resultList = appState.history.take(_pickCount).toList();
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 30),
-            // 抽选结果列表（修复overflow，限制最大高度并可滚动）
-            Card(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.list_alt_outlined, color: Theme.of(context).colorScheme.primary),
-                        SizedBox(width: 8),
-                        Text('抽选结果', style: TextStyle(fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    if (resultList.isEmpty)
-                      Text('暂无抽选结果', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                    if (resultList.isNotEmpty)
-                      SizedBox(
-                        // 限制最大高度，超出可滚动
-                        height: 200,
-                        child: ListView.separated(
-                          itemCount: resultList.length,
-                          separatorBuilder: (_, __) => Divider(height: 1),
-                          itemBuilder: (context, idx) {
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                                child: Text('${idx + 1}', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-                              ),
-                              title: Text(resultList[idx], style: TextStyle(fontWeight: FontWeight.w500)),
-                            );
-                          },
-                        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(height: 30),
+              // 名单选择
+              // 抽选结果列表（修复overflow，限制最大高度并可滚动）
+              Card(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.list_alt_outlined,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '抽选结果',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 12),
-            Card(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.filter_alt_outlined, color: Theme.of(context).colorScheme.primary),
-                        SizedBox(width: 8),
-                        Text('筛选条件', style: TextStyle(fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Text('性别：'),
-                        DropdownButton<String>(
-                          value: appState.filterGender,
-                          items: ['全部', '男', '女'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
-                          onChanged: (v) => appState.setFilterGender(v!),
+                      SizedBox(height: 10),
+                      if (resultList.isEmpty)
+                        Text(
+                          '暂无抽选结果',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                        SizedBox(width: 20),
-                        Text('学号类型：'),
-                        DropdownButton<String>(
-                          value: appState.filterNumberType,
-                          items: ['全部', '单号', '双号'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                          onChanged: (v) => appState.setFilterNumberType(v!),
+                      if (resultList.isNotEmpty)
+                        SizedBox(
+                          // 限制最大高度，超出可滚动
+                          height: 160,
+                          child: ListView.separated(
+                            itemCount: resultList.length,
+                            separatorBuilder: (_, __) => Divider(height: 1),
+                            itemBuilder: (context, idx) {
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
+                                  child: Text(
+                                    '${idx + 1}',
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                                title: Text(
+                                  resultList[idx],
+                                  style: TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Row(
-                      spacing: 10,
-                      children: [
-                        Text("抽选人数:"),
-                        IconButton(
-                          onPressed: () {
-                            if(_pickCount <= 1){
-                              setState(() {
-                                _pickCount = 1;
-                              });
-                            }else{
-                              setState(() {
-                                _pickCount -= 1;
-                              });
-                            }
-                          },
-                          icon: Icon(Icons.remove),
-                        ),
-                        Text(_pickCount.toString()),
-                        IconButton(
-                          onPressed: () {          
-                            setState(() {
-                              _pickCount += 1;
-                            });
-                          },
-                          icon: Icon(Icons.add),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 18),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton.icon(
-                  icon: Icon(Icons.casino_outlined),
-                  onPressed: () async {
-                    int count = _pickCount;
-                    for (int i = 0; i < count; i++) {
-                      await appState.getNextStudent();
-                    }
-                  },
-                  label: Text('抽选'),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    textStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            Spacer(flex: 2),
-          ],
+              ),
+              SizedBox(height: 12),
+              Card(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.list,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      SizedBox(width: 8),
+                      Text('抽选名单：'),
+                      DropdownButton<int>(
+                        value: appState.currentListId,
+                        items: appState.lists
+                            .map(
+                              (l) => DropdownMenuItem(
+                                value: l.id,
+                                child: Text(l.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (id) {
+                          appState.setCurrentListId(id);
+                        },
+                      ),
+                      IconButton(
+                        onPressed: appState._initLists, 
+                        icon: Icon(Icons.replay),
+                        tooltip: "刷新名单列表",
+                      )
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 10),
+              Card(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.filter_alt_outlined,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '筛选条件',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Text('性别：'),
+                          DropdownButton<String>(
+                            value: appState.filterGender,
+                            items: ['全部', '男', '女']
+                                .map(
+                                  (g) => DropdownMenuItem(
+                                    value: g,
+                                    child: Text(g),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) => appState.setFilterGender(v!),
+                          ),
+                          SizedBox(width: 20),
+                          Text('学号类型：'),
+                          DropdownButton<String>(
+                            value: appState.filterNumberType,
+                            items: ['全部', '单号', '双号']
+                                .map(
+                                  (t) => DropdownMenuItem(
+                                    value: t,
+                                    child: Text(t),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) => appState.setFilterNumberType(v!),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      Row(
+                        // spacing: 10, // Row 没有 spacing 属性，移除
+                        children: [
+                          Text("抽选人数:"),
+                          IconButton(
+                            onPressed: () {
+                              if (_pickCount <= 1) {
+                                setState(() {
+                                  _pickCount = 1;
+                                });
+                              } else {
+                                setState(() {
+                                  _pickCount -= 1;
+                                });
+                              }
+                            },
+                            icon: Icon(Icons.remove),
+                          ),
+                          Text(_pickCount.toString()),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _pickCount += 1;
+                              });
+                            },
+                            icon: Icon(Icons.add),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 18),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    icon: Icon(Icons.casino_outlined),
+                    onPressed: () async {
+                      int count = _pickCount;
+                      for (int i = 0; i < count; i++) {
+                        await appState.getNextStudent();
+                      }
+                    },
+                    label: Text('抽选'),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      textStyle: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 18),
+            ],
+          ),
         ),
       ),
     );
@@ -637,10 +776,7 @@ class _GeneratorPageState extends State<GeneratorPage> {
 }
 
 class BigCard extends StatelessWidget {
-  const BigCard({
-    Key? key,
-    required this.pair,
-  }) : super(key: key);
+  const BigCard({Key? key, required this.pair}) : super(key: key);
 
   final String pair;
 
@@ -664,8 +800,11 @@ class BigCard extends StatelessWidget {
               children: [
                 Text(
                   pair,
-                  style: style.copyWith(fontWeight: FontWeight.w200,fontFamily: "HarmonyOS_Sans_SC"),
-                )
+                  style: style.copyWith(
+                    fontWeight: FontWeight.w200,
+                    fontFamily: "HarmonyOS_Sans_SC",
+                  ),
+                ),
               ],
             ),
           ),
@@ -697,11 +836,13 @@ class SettingsPage extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text(
             '设置',
-            style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.left,
           ),
         ),
-        SizedBox(width: 10,),
+        SizedBox(width: 10),
         SettingsCard(
           title: Text("主题模式"),
           leading: Icon(Icons.brightness_6_outlined),
@@ -742,7 +883,9 @@ class AboutPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
           child: Card(
             elevation: 4,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
             color: colorScheme.surfaceContainer,
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -752,7 +895,11 @@ class AboutPage extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.asset('assets/NamePicker.png', width: 120, height: 120),
+                    child: Image.asset(
+                      'assets/NamePicker.png',
+                      width: 120,
+                      height: 120,
+                    ),
                   ),
                   SizedBox(height: 24),
                   Row(
@@ -760,23 +907,41 @@ class AboutPage extends StatelessWidget {
                     children: [
                       Text(
                         sprintf("NamePicker %s", [version]),
-                        style: TextStyle(fontFamily: "HarmonyOS_Sans_SC", fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+                        style: TextStyle(
+                          fontFamily: "HarmonyOS_Sans_SC",
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
                     ],
                   ),
                   SizedBox(height: 8),
                   Text(
                     'Codename $codename',
-                    style: TextStyle(fontFamily: "HarmonyOS_Sans_SC", fontSize: 15, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontFamily: "HarmonyOS_Sans_SC",
+                      fontSize: 15,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   SizedBox(height: 16),
-                  Divider(height: 32, thickness: 1, color: colorScheme.outlineVariant),
+                  Divider(
+                    height: 32,
+                    thickness: 1,
+                    color: colorScheme.outlineVariant,
+                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: Text(
-                      "「云间城邦随岁月离析，昏光庭院再度敞开门扉，为永夜捎来微光」",
+                      "「这次能让我玩得开心点吗？」",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: "HarmonyOS_Sans_SC", fontSize: 16, fontWeight: FontWeight.w400, color: colorScheme.primary),
+                      style: TextStyle(
+                        fontFamily: "HarmonyOS_Sans_SC",
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                        color: colorScheme.primary,
+                      ),
                     ),
                   ),
                   SizedBox(height: 24),
@@ -788,13 +953,22 @@ class AboutPage extends StatelessWidget {
                         backgroundColor: colorScheme.primaryContainer,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(18),
-                          child: Image.asset('assets/avaters/lhgser.jpg', width: 60, height: 60),
+                          child: Image.asset(
+                            'assets/avaters/lhgser.jpg',
+                            width: 60,
+                            height: 60,
+                          ),
                         ),
                       ),
                       SizedBox(width: 10),
                       Text(
                         "开发者 灵魂歌手er",
-                        style: TextStyle(fontFamily: "HarmonyOS_Sans_SC", fontSize: 16, fontWeight: FontWeight.w500, color: colorScheme.onSurface),
+                        style: TextStyle(
+                          fontFamily: "HarmonyOS_Sans_SC",
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurface,
+                        ),
                       ),
                     ],
                   ),
@@ -813,7 +987,10 @@ class AboutPage extends StatelessWidget {
                   SizedBox(height: 12),
                   Text(
                     "© 2025-2025 NamePickerOrg",
-                    style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -866,9 +1043,7 @@ class _HistoryListViewState extends State<HistoryListView> {
           final pair = appState.history[index];
           return SizeTransition(
             sizeFactor: animation,
-            child: Center(
-              child: HistoryCard(pair: pair),
-            ),
+            child: Center(child: HistoryCard(pair: pair)),
           );
         },
       ),
@@ -877,10 +1052,7 @@ class _HistoryListViewState extends State<HistoryListView> {
 }
 
 class HistoryCard extends StatelessWidget {
-  const HistoryCard({
-    super.key,
-    required this.pair,
-  });
+  const HistoryCard({super.key, required this.pair});
 
   final String pair;
 
@@ -888,13 +1060,9 @@ class HistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(5.0),
-      child: Card(
-        child: Text(
-          sprintf("  %s  ",[pair]),
-          semanticsLabel: pair,
-        ),
-      ),
+      child: Card(child: Text(sprintf("  %s  ", [pair]), semanticsLabel: pair)),
     );
   }
 }
+
 // 成为英雄吧，救世主。

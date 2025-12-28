@@ -5,8 +5,9 @@ class Student {
   String name;
   String gender;
   String studentId;
+  int? listId;
 
-  Student({this.id, required this.name, required this.gender, required this.studentId});
+  Student({this.id, required this.name, required this.gender, required this.studentId, this.listId});
 
   Map<String, dynamic> toMap() {
     return {
@@ -14,6 +15,7 @@ class Student {
       'name': name,
       'gender': gender,
       'studentId': studentId,
+      'listId': listId,
     };
   }
 
@@ -23,6 +25,7 @@ class Student {
       name: map['name'],
       gender: map['gender'],
       studentId: map['studentId'],
+      listId: map['listId'],
     );
   }
 }

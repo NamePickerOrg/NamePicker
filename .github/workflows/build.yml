@@ -186,25 +186,3 @@ jobs:
         with:
           name: NamePicker-Android-APK
           path: namepicker/build/app/outputs/flutter-apk/app-release.apk
-
-  release:
-    needs: [build_windows, build_linux, build_macos_intel, build_macos_arm, build_android]
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.event.inputs.version }}
-          name: NamePicker ${{ github.event.inputs.version }}
-          body_path: CHANGELOG.md
-          files: |
-            artifacts/**/*
