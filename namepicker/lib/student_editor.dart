@@ -111,7 +111,7 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
         final directory = await getTemporaryDirectory();
         final file = File('${directory.path}/namepicker.csv');
         await file.writeAsString(buffer.toString(), flush: true);
-        await Share.shareXFiles([XFile(file.path)], text: 'NamePicker Export');
+        await Share.shareXFiles([XFile(file.path)]);
       }
     } else {
       String? outputPath;
