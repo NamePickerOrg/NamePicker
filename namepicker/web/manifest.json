@@ -1,6 +1,6 @@
 {
-    "name": "namepicker",
-    "short_name": "namepicker",
+    "name": "NamePicker",
+    "short_name": "NamePicker",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
