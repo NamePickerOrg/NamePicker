@@ -99,17 +99,22 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
       ).showSnackBar(SnackBar(content: Text('Web端暂不支持导出')));
       return;
     }
+    final now = DateTime.now();
+    final timestamp =
+        "${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}-${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}";
+    final filename = "namepicker-export-$timestamp.csv";
+
     if (Platform.isAndroid || Platform.isIOS) {
       if (Platform.isAndroid) {
         final dir = '/storage/emulated/0/Download';
-        final file = File('$dir/namepicker.csv');
+        final file = File('$dir/$filename');
         await file.writeAsString(buffer.toString(), flush: true);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('导出完成: $dir/namepicker.csv')));
+        ).showSnackBar(SnackBar(content: Text('导出完成: $dir/$filename')));
       } else {
         final directory = await getTemporaryDirectory();
-        final file = File('${directory.path}/namepicker.csv');
+        final file = File('${directory.path}/$filename');
         await file.writeAsString(buffer.toString(), flush: true);
         await Share.shareXFiles([XFile(file.path)]);
       }
@@ -118,7 +123,7 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
       try {
         outputPath = await FilePicker.platform.saveFile(
           dialogTitle: '导出名单为CSV',
-          fileName: 'namepicker.csv',
+          fileName: filename,
           type: FileType.custom,
           allowedExtensions: ['csv'],
         );
