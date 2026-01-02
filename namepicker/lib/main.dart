@@ -31,11 +31,7 @@ Future<void> main() async {
     databaseFactory = databaseFactoryFfi;
     await windowManager.ensureInitialized();
     await windowManager.waitUntilReadyToShow();
-    if (Platform.isMacOS) {
-      await windowManager.setTitleBarStyle(TitleBarStyle.normal);
-    } else {
-      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
-    }
+    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     await windowManager.setSize(const Size(900, 600));
     await windowManager.setMinimumSize(const Size(600, 400));
     await windowManager.center();
@@ -287,7 +283,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       body: Column(
         children: [
-          if (!Platform.isMacOS & !Platform.isAndroid & !Platform.isIOS) CustomTitleBar(),
+          if (!Platform.isAndroid & !Platform.isIOS) CustomTitleBar(),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -421,7 +417,7 @@ class CustomTitleBar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            SizedBox(width: 12),
+            SizedBox(width: Platform.isMacOS ? 76 : 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: Image.asset(
@@ -444,33 +440,35 @@ class CustomTitleBar extends StatelessWidget {
             SizedBox(width: 8),
             Container(width: 1, height: 20, color: colorScheme.outlineVariant),
             Spacer(),
-            _TitleBarButton(
-              icon: Icons.minimize,
-              tooltip: '最小化',
-              onTap: () => windowManager.minimize(),
-              color: colorScheme.onSurfaceVariant,
-            ),
-            _TitleBarButton(
-              icon: Icons.crop_square,
-              tooltip: '最大化/还原',
-              onTap: () async {
-                bool isMax = await windowManager.isMaximized();
-                if (isMax) {
-                  await windowManager.unmaximize();
-                } else {
-                  await windowManager.maximize();
-                }
-              },
-              color: colorScheme.onSurfaceVariant,
-            ),
-            _TitleBarButton(
-              icon: Icons.close,
-              tooltip: '关闭',
-              onTap: () => windowManager.close(),
-              color: colorScheme.error,
-              hoverColor: colorScheme.errorContainer,
-            ),
-            SizedBox(width: 8),
+            if (!Platform.isMacOS) ...[
+              _TitleBarButton(
+                icon: Icons.minimize,
+                tooltip: '最小化',
+                onTap: () => windowManager.minimize(),
+                color: colorScheme.onSurfaceVariant,
+              ),
+              _TitleBarButton(
+                icon: Icons.crop_square,
+                tooltip: '最大化/还原',
+                onTap: () async {
+                  bool isMax = await windowManager.isMaximized();
+                  if (isMax) {
+                    await windowManager.unmaximize();
+                  } else {
+                    await windowManager.maximize();
+                  }
+                },
+                color: colorScheme.onSurfaceVariant,
+              ),
+              _TitleBarButton(
+                icon: Icons.close,
+                tooltip: '关闭',
+                onTap: () => windowManager.close(),
+                color: colorScheme.error,
+                hoverColor: colorScheme.errorContainer,
+              ),
+              SizedBox(width: 8),
+            ],
           ],
         ),
       ),
