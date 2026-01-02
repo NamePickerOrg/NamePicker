@@ -248,43 +248,46 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   var selectedIndex = 0;
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     var colorScheme = Theme.of(context).colorScheme;
 
-    Widget page;
-    switch (selectedIndex) {
-      case 0:
-        page = GeneratorPage();
-        break;
-      case 1:
-        page = NameListPage();
-        break;
-      case 2:
-        page = SettingsPage();
-        break;
-      case 3:
-        page = AboutPage();
-        break;
-      default:
-        throw UnimplementedError('no widget for $selectedIndex');
-    }
+    final pages = [
+      GeneratorPage(),
+      NameListPage(),
+      SettingsPage(),
+      AboutPage(),
+    ];
 
     // The container for the current page, with its background color
     // and subtle switching animation.
     var mainArea = ColoredBox(
       color: colorScheme.surfaceContainerHighest,
-      child: AnimatedSwitcher(
-        duration: Duration(milliseconds: 200),
-        child: page,
+      child: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: pages,
       ),
     );
 
     return Scaffold(
       body: Column(
         children: [
-          if (!Platform.isMacOS & !Platform.isAndroid) CustomTitleBar(),
+          if (!Platform.isMacOS & !Platform.isAndroid & !Platform.isIOS) CustomTitleBar(),
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -319,6 +322,11 @@ class _MyHomePageState extends State<MyHomePage> {
                             setState(() {
                               selectedIndex = value;
                             });
+                            _pageController.animateToPage(
+                              value,
+                              duration: const Duration(milliseconds: 677),
+                              curve: Curves.fastLinearToSlowEaseIn,
+                            );
                           },
                           backgroundColor: colorScheme.surface,
                           selectedItemColor: colorScheme.primary,
@@ -359,6 +367,11 @@ class _MyHomePageState extends State<MyHomePage> {
                             setState(() {
                               selectedIndex = value;
                             });
+                            _pageController.animateToPage(
+                              value,
+                              duration: const Duration(milliseconds: 677),
+                              curve: Curves.fastLinearToSlowEaseIn,
+                            );
                           },
                         ),
                       ),

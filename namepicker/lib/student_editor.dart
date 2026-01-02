@@ -99,13 +99,20 @@ class _StudentEditorPageState extends State<StudentEditorPage> {
       ).showSnackBar(SnackBar(content: Text('Web端暂不支持导出')));
       return;
     }
-    if (Platform.isAndroid) {
-      final dir = '/storage/emulated/0/Download';
-      final file = File('$dir/namepicker.csv');
-      await file.writeAsString(buffer.toString(), flush: true);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('导出完成: $dir/namepicker.csv')));
+    if (Platform.isAndroid || Platform.isIOS) {
+      if (Platform.isAndroid) {
+        final dir = '/storage/emulated/0/Download';
+        final file = File('$dir/namepicker.csv');
+        await file.writeAsString(buffer.toString(), flush: true);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('导出完成: $dir/namepicker.csv')));
+      } else {
+        final directory = await getTemporaryDirectory();
+        final file = File('${directory.path}/namepicker.csv');
+        await file.writeAsString(buffer.toString(), flush: true);
+        await Share.shareXFiles([XFile(file.path)], text: 'NamePicker Export');
+      }
     } else {
       String? outputPath;
       try {
