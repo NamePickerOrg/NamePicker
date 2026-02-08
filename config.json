@@ -9,7 +9,7 @@
         "apiver": 1
     },
     "Huanyu": {
-        "ecoMode": false,
+        "ecoMode": true,
         "justice": false
     },
     "Secure": {
@@ -18,7 +18,7 @@
         "lockNameEdit": false
     },
     "Debug": {
-        "logLevel": "INFO"
+        "logLevel": "DEBUG"
     },
     "QFluentWidgets": {
         "ThemeColor": "#ff009faa",
