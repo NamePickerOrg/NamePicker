@@ -17,8 +17,8 @@ if os.name == 'nt':
     from win32com.client import Dispatch
 
 temp_dir = tempfile.gettempdir()
-VERSION = "v2.0.3dev"
-CODENAME = "Robin"
+VERSION = "v2.2.0Remake"
+CODENAME = "ChrysosHeirs"
 APIVER = 1
 error_dialog = None
 tray = None
@@ -32,6 +32,8 @@ plugin_filters = []
 plugin_filters_name = []
 plugin_icon = {}
 plugin_path = {}
+current_name_path = ""
+
 def load_plugins():
     for i in os.listdir("plugins"):
         if not (os.path.exists("plugins/%s/info.json"%i) and os.path.exists("plugins/%s/icon.png"%i) and os.path.exists("plugins/%s/main.py"%i)):
@@ -39,7 +41,7 @@ def load_plugins():
             continue
         elif os.path.exists("plugins/%s/DEL"%i):
             os.remove("plugins/%s"%i)
-            logger.info("插件被成功移除")
+            logger.success(f"插件{i}被成功移除")
             continue
         else:
             with open("plugins/%s/info.json"%i,"r",encoding="utf-8") as f:
@@ -68,10 +70,11 @@ def load_plugins():
                 else:
                     logger.warning("插件%s已被禁用" % js["id"])
                     continue
-            logger.info("加载插件：%s成功"%js["id"])
+            logger.success("加载插件：%s成功"%js["id"])
 
 def apply_customkey():
-    with open("names.csv", "r", encoding="utf-8") as f:
+    global current_name_path
+    with open(current_name_path, "r", encoding="utf-8") as f:
         namesread = f.readlines()
         for i in range(len(namesread)):
             namesread[i] = namesread[i].strip("\n")
@@ -83,7 +86,7 @@ def apply_customkey():
                         continue
                     namesread[j] += ",Nope"
 
-    with open("names.csv","w",encoding="utf-8") as f:
+    with open(current_name_path,"w",encoding="utf-8") as f:
         namewrite = []
         for i in range(len(namesread)):
             namewrite.append(namesread[i]+"\n")
@@ -110,13 +113,14 @@ cfg = Config()
 qconfig.load('config.json', cfg)
 cfg.set(cfg.apiver,APIVER)
 
+# 日志
 if os.path.exists("out.log"):
     os.remove("out.log")
 logger.remove(0)
 logger.add("out.log")
 logger.add(sys.stderr, level=cfg.get(cfg.logLevel))
-
-logger.info("「她将自己的生活形容为一首歌，而那首歌的开始阴沉而苦涩。⌋")
+logger.info(f"NamePicker Ver {VERSION} Codename {CODENAME} Plugin API Version {APIVER}")
+logger.info("「当前演算进程：___ _ _ -_-- --- __- - --- -- --- _-_ _-_ --- _--⌋")
 
 def hookExceptions(exc_type, exc_value, exc_tb):
     error_details = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
@@ -327,17 +331,24 @@ class PluginSettings(QFrame):
 class Choose(QFrame):
 
     def __init__(self, text: str, parent=None):
+        global current_name_path
         super().__init__(parent=parent)
         self.names = {}
+        self.namelist = []
         self.sexlen = [0,0,0]
         self.sexl = [[],[],[]]
         self.numlen = [0,0,0]
         self.numl = [[],[],[]]
         self.chosen = []
+        current_name_path = f"names/{os.listdir("names")[0]}"
         self.loadname()
 
         self.hBoxLayout = QHBoxLayout(self)
         self.options = QVBoxLayout(self)
+
+        for i in os.listdir("names"):
+                if os.path.isfile(f"names/{i}"):
+                    self.namelist.append(f"names/{i}")
 
         if cfg.get(cfg.justice):
             self.just = StrongBodyLabel("NamePicker绝对没有暗改概率功能")
@@ -366,6 +377,27 @@ class Choose(QFrame):
         self.pnl.addWidget(self.pickNum, 5)
         self.pn.setLayout(self.pnl)
         self.options.addWidget(self.pn,5)
+
+        # self.sep = QWidget()
+        # self.sepl = QHBoxLayout(self)
+        # self.seLabel = SubtitleLabel("性别偏好", self)
+        # self.sexCombo = ComboBox()
+        # self.sexCombo.addItems(os.listdir("names"))
+        # self.sepl.addWidget(self.seLabel, 10)
+        # self.sepl.addWidget(self.sexCombo, 5)
+        # self.sep.setLayout(self.sepl)
+        # self.options.addWidget(self.sep, 5)
+
+        self.nmp = QWidget()
+        self.nmpl = QHBoxLayout(self)
+        self.nmLabel = SubtitleLabel("选择名单", self)
+        self.nameCombo = ComboBox()
+        self.nameCombo.addItems(os.listdir("names"))
+        self.nameCombo.currentIndexChanged.connect(lambda index: self.relaod(index))
+        self.nmpl.addWidget(self.nmLabel, 10)
+        self.nmpl.addWidget(self.nameCombo, 5)
+        self.nmp.setLayout(self.nmpl)
+        self.options.addWidget(self.nmp, 5)
 
         self.sep = QWidget()
         self.sepl = QHBoxLayout(self)
@@ -524,45 +556,63 @@ class Choose(QFrame):
         )
 
     def loadname(self):
-        try:
-            name = pd.read_csv("names.csv", sep=",", header=0)
-            name = name.to_dict()
-            self.names["name"] = list(name["name"].values())
-            self.names["sex"] = list(name["sex"].values())
-            self.names["no"] = list(name["no"].values())
-            for i in plugin_customkey:
-                self.names[i] = list(name[i].values())
-            for k in self.names.keys():
-                for i in range(len(self.names[k])):
-                    self.names[k][i] = str(self.names[k][i])
-            self.length =len(name["name"])
-            self.sexlen[0] = self.names["sex"].count("0")
-            self.sexlen[1] = self.names["sex"].count("1")
-            self.sexlen[2] = self.names["sex"].count("2")
-            for i in self.names["name"]:
-                if int(self.names["sex"][self.names["name"].index(i)]) == 0:
-                    self.sexl[0].append(i)
-                elif int(self.names["sex"][self.names["name"].index(i)]) == 1:
-                    self.sexl[1].append(i)
-                else:
-                    self.sexl[2].append(i)
+        global current_name_path
+        if os.path.exists("names"):
+            try:
+                name = pd.read_csv(current_name_path, sep=",", header=0)
+                name = name.to_dict()
+                self.names["name"] = list(name["name"].values())
+                self.names["sex"] = list(name["sex"].values())
+                self.names["no"] = list(name["no"].values())
+                for i in plugin_customkey:
+                    self.names[i] = list(name[i].values())
+                for k in self.names.keys():
+                    for i in range(len(self.names[k])):
+                        self.names[k][i] = str(self.names[k][i])
+                self.length =len(name["name"])
+                self.sexlen[0] = self.names["sex"].count("0")
+                self.sexlen[1] = self.names["sex"].count("1")
+                self.sexlen[2] = self.names["sex"].count("2")
+                for i in self.names["name"]:
+                    if int(self.names["sex"][self.names["name"].index(i)]) == 0:
+                        self.sexl[0].append(i)
+                    elif int(self.names["sex"][self.names["name"].index(i)]) == 1:
+                        self.sexl[1].append(i)
+                    else:
+                        self.sexl[2].append(i)
 
-            for i in self.names["name"]:
-                if int(self.names["no"][self.names["name"].index(i)])%2==0:
-                    self.numl[0].append(i)
-                else:
-                    self.numl[1].append(i)
-            self.numlen[0] = len(self.numl[0])
-            self.numlen[1] = len(self.numl[1])
-            logger.info("名单加载完成")
-        except FileNotFoundError:
+                for i in self.names["name"]:
+                    if int(self.names["no"][self.names["name"].index(i)])%2==0:
+                        self.numl[0].append(i)
+                    else:
+                        self.numl[1].append(i)
+                self.numlen[0] = len(self.numl[0])
+                self.numlen[1] = len(self.numl[1])
+                logger.info("名单加载完成")
+            except FileNotFoundError:
+                logger.warning("没有找到名单文件")
+                with open("names/names.csv","w",encoding="utf-8") as f:
+                    st  = ["name,sex,no\n","example,0,1"]
+                    f.writelines(st)
+                current_name_path = "names/names.csv"
+                w = Dialog("没有找到名单文件", "没有找到名单文件，已为您创建默认名单，请自行编辑", self)
+                w.exec()
+                self.loadname()
+        else:
+            os.mkdir("names")
             logger.warning("没有找到名单文件")
-            with open("names.csv","w",encoding="utf-8") as f:
+            with open("names/names.csv","w",encoding="utf-8") as f:
                 st  = ["name,sex,no\n","example,0,1"]
                 f.writelines(st)
+            current_name_path = "names/names.csv"
             w = Dialog("没有找到名单文件", "没有找到名单文件，已为您创建默认名单，请自行编辑", self)
             w.exec()
             self.loadname()
+
+    def relaod(self,index):
+        global current_name_path
+        current_name_path = f"names/{os.listdir("names")[index]}"
+        self.loadname()
 
 class NameEdit(QFrame):
     def __init__(self, text: str, parent=None):
@@ -637,11 +687,12 @@ class NameEdit(QFrame):
         logger.debug(self.editing)
 
     def savename(self):
+        global current_name_path
         self.selected_items = self.table.selectedItems()
         self.selected_data = [item.text() for item in self.selected_items]
         self.nametable[self.editing] = self.selected_data
         logger.debug(self.nametable)
-        with open("names.csv","w",encoding="utf-8") as f:
+        with open(current_name_path,"w",encoding="utf-8") as f:
             namewrite = [",".join(list(self.names.keys()))+"\n"]
             t = 0
             for i in range(len(self.nametable)):
@@ -657,7 +708,8 @@ class NameEdit(QFrame):
             f.writelines(namewrite)
 
     def loadname(self):
-        name = pd.read_csv("names.csv", sep=",", header=0)
+        global current_name_path
+        name = pd.read_csv(current_name_path, sep=",", header=0)
         name = name.to_dict()
         self.names["name"] = list(name["name"].values())
         self.names["sex"] = list(name["sex"].values())
@@ -695,8 +747,10 @@ class Settings(QFrame):
         self.optv =QWidget()
         self.opts = QVBoxLayout(self.optv)
         self.tlog = PushButton(FluentIcon.DOCUMENT,"测试日志输出")
+        self.rlog = PushButton(FluentIcon.SYNC,"重载日志系统")
         self.tcrash = PushButton(FluentIcon.CLOSE,"测试引发崩溃")
         self.tlog.clicked.connect(self.testLog)
+        self.rlog.clicked.connect(self.reloadLog)
         self.tcrash.clicked.connect(self.testCrash)
         self.cKey=SettingCard(
             icon=FluentIcon.FONT,
@@ -758,14 +812,16 @@ class Settings(QFrame):
          title="禁用设置编辑",
          content="启用后，将无法进行软件内设置编辑，重启生效"
         ),
-        SubtitleLabel("调试"),
+        SubtitleLabel("调试（不要随意使用以下功能，除非您知道您在干什么）"),
         ComboBoxSettingCard(
             configItem=cfg.logLevel,
             icon=FluentIcon.DEVELOPER_TOOLS,
             title="日志记录级别",
             content="日志的详细程度（重启以应用更改）",
             texts=["DEBUG", "INFO", "WARNING","ERROR"]
-        ),self.tlog,
+        ),
+        self.tlog,
+        self.rlog,
         self.tcrash,
         SubtitleLabel("欢愉（太有乐子了）"),
         SwitchSettingCard(
@@ -784,7 +840,6 @@ class Settings(QFrame):
         self.scrollArea.setStyleSheet("QScrollArea{background: transparent; border: none}")
         self.scrollArea.setWidget(self.optv)
         self.optv.setStyleSheet("QWidget{background: transparent}")
-        self.df.addWidget(TitleLabel("设置"))
         QScroller.grabGesture(self.scrollArea.viewport(), QScroller.LeftMouseButtonGesture)
         self.df.addWidget(self.pivot)
         self.addSubInterface(self.scrollArea,"Settings","本体设置")
@@ -840,6 +895,18 @@ class Settings(QFrame):
         logger.warning("这是Warning日志")
         logger.error("这是Error日志")
 
+    def reloadLog(self):
+        w = MessageBox("危险操作", "重载日志系统会清空此前日志并可能引发问题，请不要！不要！不要！使用该功能！除非您真的清楚您在干什么！", self)
+        w.yesButton.setText("我真的很清楚我在干什么！")
+        w.cancelButton.setText("算了")
+        if w.exec():
+            logger.remove(1)
+            if os.path.exists("out.log"):
+                os.remove("out.log")
+            logger.add("out.log")
+            logger.add(sys.stderr, level=cfg.get(cfg.logLevel))
+            logger.success("日志系统重载完成")
+
     def testCrash(self):
         raise Exception("NamePicker实际上没有任何问题，是你自己手贱引发的崩溃")
 
@@ -871,7 +938,9 @@ class About(QFrame):
         self.setObjectName(text.replace(' ', 'About'))
         self.df = QVBoxLayout(self)
         self.about = TitleLabel("关于")
-        self.image = ImageLabel("assets/NamePicker.png")
+        self.image = ImageLabel(QPixmap("assets/NamePickerCircle.png"))
+        # self.image.resize(100,100)
+        # self.image.setScaledContents(True)
         self.ver = SubtitleLabel("NamePicker %s - Codename %s"%(VERSION,CODENAME))
         self.author = BodyLabel("By 灵魂歌手er（Github @LHGS-github）")
         self.cpleft = BodyLabel("本软件基于GNU GPLv3获得授权")
@@ -990,7 +1059,7 @@ class App(FluentWindow):
 
     def initWindow(self):
         self.resize(700, 500)
-        self.setWindowIcon(QIcon('assets/NamePicker.png'))
+        self.setWindowIcon(QIcon('assets/NamePickerCircle.png'))
         self.setWindowTitle('NamePicker')
 
     def closeEvent(self, event):
@@ -1006,7 +1075,7 @@ class SystemTrayIcon(QSystemTrayIcon):
         self.setIcon(parent.windowIcon())
         self.menu = SystemTrayMenu(parent=parent)
         self.menu.addActions([
-            Action(icon=QIcon("assets/NamePicker.png"),text="NamePicker"),
+            Action(icon=QIcon("assets/NamePickerCircle.png"),text="NamePicker"),
             Action(FluentIcon.HELP,"帮助",triggered=lambda: QDesktopServices.openUrl(QUrl(
                 'https://namepicker-docs.netlify.app')))
         ])

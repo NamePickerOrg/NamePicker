@@ -1,0 +1,42 @@
+2026-02-25 16:19:20.930 | INFO     | __main__:<module>:122 - NamePicker Ver v2.2.0Remake Codename ChrysosHeirs Plugin API Version 1
+2026-02-25 16:19:20.930 | INFO     | __main__:<module>:123 - 「当前演算进程：___ _ _ -_-- --- __- - --- -- --- _-_ _-_ --- _--⌋
+2026-02-25 16:19:20.938 | WARNING  | __main__:load_plugins:40 - 目录111.txt没有有效插件
+2026-02-25 16:19:21.493 | INFO     | __main__:loadname:591 - 名单加载完成
+2026-02-25 16:19:21.532 | INFO     | __main__:__init__:454 - 主界面初始化完成
+2026-02-25 16:19:21.534 | DEBUG    | __main__:loadname:733 - [['example', '0', '1']]
+2026-02-25 16:19:21.534 | INFO     | __main__:loadname:734 - 名单加载完成
+2026-02-25 16:19:21.608 | INFO     | __main__:__init__:853 - 设置界面初始化完成
+2026-02-25 16:19:21.614 | INFO     | __main__:__init__:329 - 插件设置界面初始化完成
+2026-02-25 16:19:21.620 | INFO     | __main__:__init__:961 - 关于界面初始化
+2026-02-25 16:19:21.650 | INFO     | __main__:__init__:1036 - 主界面初始化
+2026-02-25 16:19:26.311 | INFO     | __main__:loadname:591 - 名单加载完成
+2026-02-25 16:19:27.217 | DEBUG    | __main__:pickcb:518 - pickcb被调用
+2026-02-25 16:19:27.217 | DEBUG    | __main__:pick:507 - [0]
+2026-02-25 16:19:27.217 | DEBUG    | __main__:pickcb:543 - 表格设置完成
+2026-02-25 16:19:28.080 | DEBUG    | __main__:pickcb:518 - pickcb被调用
+2026-02-25 16:19:28.080 | DEBUG    | __main__:pick:507 - [0]
+2026-02-25 16:19:28.080 | DEBUG    | __main__:pickcb:543 - 表格设置完成
+2026-02-25 16:19:28.264 | DEBUG    | __main__:pickcb:518 - pickcb被调用
+2026-02-25 16:19:28.264 | DEBUG    | __main__:pick:507 - [0]
+2026-02-25 16:19:28.264 | DEBUG    | __main__:pickcb:543 - 表格设置完成
+2026-02-25 16:19:29.578 | INFO     | __main__:loadname:591 - 名单加载完成
+2026-02-25 16:19:30.080 | DEBUG    | __main__:pickcb:518 - pickcb被调用
+2026-02-25 16:19:30.081 | DEBUG    | __main__:pick:507 - [0]
+2026-02-25 16:19:30.081 | DEBUG    | __main__:pickcb:543 - 表格设置完成
+2026-02-25 16:19:30.257 | DEBUG    | __main__:pickcb:518 - pickcb被调用
+2026-02-25 16:19:30.257 | DEBUG    | __main__:pick:507 - [0]
+2026-02-25 16:19:30.257 | DEBUG    | __main__:pickcb:543 - 表格设置完成
+2026-02-25 16:19:30.433 | DEBUG    | __main__:pickcb:518 - pickcb被调用
+2026-02-25 16:19:30.433 | DEBUG    | __main__:pick:507 - [0]
+2026-02-25 16:19:30.433 | DEBUG    | __main__:pickcb:543 - 表格设置完成
+2026-02-25 16:19:30.593 | DEBUG    | __main__:pickcb:518 - pickcb被调用
+2026-02-25 16:19:30.593 | DEBUG    | __main__:pick:507 - [0]
+2026-02-25 16:19:30.594 | DEBUG    | __main__:pickcb:543 - 表格设置完成
+2026-02-25 16:19:31.300 | DEBUG    | __main__:checkLocker:1041 - <__main__.NameEdit object at 0x000001DCCF533650>
+2026-02-25 16:19:31.962 | DEBUG    | __main__:checkLocker:1041 - <__main__.Choose object at 0x000001DCCF507260>
+2026-02-25 16:19:32.986 | DEBUG    | __main__:checkLocker:1041 - <__main__.Settings object at 0x000001DCCF549250>
+2026-02-25 16:19:33.596 | DEBUG    | __main__:checkLocker:1041 - <__main__.NameEdit object at 0x000001DCCF533650>
+2026-02-25 16:19:35.243 | DEBUG    | __main__:checkLocker:1041 - <__main__.Choose object at 0x000001DCCF507260>
+2026-02-25 16:19:36.451 | INFO     | __main__:loadname:591 - 名单加载完成
+2026-02-25 16:19:37.155 | DEBUG    | __main__:checkLocker:1041 - <__main__.NameEdit object at 0x000001DCCF533650>
+2026-02-25 16:19:37.898 | DEBUG    | __main__:checkLocker:1041 - <__main__.Choose object at 0x000001DCCF507260>

@@ -18,7 +18,7 @@
         "lockNameEdit": false
     },
     "Debug": {
-        "logLevel": "INFO"
+        "logLevel": "DEBUG"
     },
     "QFluentWidgets": {
         "ThemeColor": "#ff009faa",
