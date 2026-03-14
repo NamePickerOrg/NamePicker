@@ -120,7 +120,7 @@ logger.remove(0)
 logger.add("out.log")
 logger.add(sys.stderr, level=cfg.get(cfg.logLevel))
 logger.info(f"NamePicker Ver {VERSION} Codename {CODENAME} Plugin API Version {APIVER}")
-logger.info("「当前演算进程：___ _ _ -_-- --- __- - --- -- --- _-_ _-_ --- _--⌋")
+logger.info("「___ _ _ -_-- --- __- - --- -- --- _-_ _-_ --- _--⌋")
 
 def hookExceptions(exc_type, exc_value, exc_tb):
     error_details = ''.join(traceback.format_exception(exc_type, exc_value, exc_tb))
@@ -340,15 +340,15 @@ class Choose(QFrame):
         self.numlen = [0,0,0]
         self.numl = [[],[],[]]
         self.chosen = []
-        current_name_path = f"names/{os.listdir("names")[0]}"
+        current_name_path = "names/%s"%os.listdir("names")[0]
         self.loadname()
 
         self.hBoxLayout = QHBoxLayout(self)
         self.options = QVBoxLayout(self)
 
         for i in os.listdir("names"):
-                if os.path.isfile(f"names/{i}"):
-                    self.namelist.append(f"names/{i}")
+                if os.path.isfile("names/%s"%i):
+                    self.namelist.append("names/%s"%i)
 
         if cfg.get(cfg.justice):
             self.just = StrongBodyLabel("NamePicker绝对没有暗改概率功能")
@@ -626,7 +626,7 @@ class NameEdit(QFrame):
         self.title = TitleLabel("名单编辑")
         self.vbox.addWidget(self.title)
 
-        self.expl = BodyLabel("所有更改都将自动保存至文件，可以直接编辑表格内容")
+        self.expl = BodyLabel("该功能基本上不可用，请优先考虑直接编辑CSV文件")
         self.vbox.addWidget(self.expl)
 
         self.table = TableWidget(self)
@@ -646,20 +646,29 @@ class NameEdit(QFrame):
         self.option = QHBoxLayout(self.opv)
         self.add = PushButton(FluentIcon.ADD,"添加一行")
         self.rem = PushButton(FluentIcon.DELETE,"删除选中行")
+        self.rel = PushButton(FluentIcon.SYNC,"刷新")
+        self.sav = PushButton(FluentIcon.SAVE,"保存")
         self.add.clicked.connect(self.addrow)
         self.rem.clicked.connect(self.delrow)
+        self.rel.clicked.connect(self.reload)
+        self.sav.clicked.connect(self.savename)
         self.option.addWidget(self.add)
         self.option.addWidget(self.rem)
+        self.option.addWidget(self.rel)
+        self.option.addWidget(self.sav)
         self.vbox.addWidget(self.opv)
 
         self.refresh()
         self.vbox.addWidget(self.table)
         self.table.clicked.connect(self.select)
-        self.table.itemChanged.connect(self.savename)
         self.selected_items = self.table.selectedItems()
         self.selected_data = [item.text() for item in self.selected_items]
 
         self.setObjectName(text.replace(' ', 'NameEdit'))
+
+    def reload(self):
+        self.loadname()
+        self.refresh()
 
     def refresh(self):
         self.table.setRowCount(len(self.nametable))
@@ -668,7 +677,7 @@ class NameEdit(QFrame):
                 self.table.setItem(i, j, QTableWidgetItem(str(t[j])))
 
     def addrow(self):
-        tmp = ["example","男","0"]
+        tmp = ["example","0","0"]
         for t in range(len(self.names.keys())-3):
             tmp.append("None")
         self.nametable.append(tmp)
@@ -690,20 +699,17 @@ class NameEdit(QFrame):
         global current_name_path
         self.selected_items = self.table.selectedItems()
         self.selected_data = [item.text() for item in self.selected_items]
-        self.nametable[self.editing] = self.selected_data
+        if 0 <= self.editing < len(self.nametable):
+            self.nametable[self.editing] = self.selected_data
         logger.debug(self.nametable)
-        with open(current_name_path,"w",encoding="utf-8") as f:
-            namewrite = [",".join(list(self.names.keys()))+"\n"]
+        with open(current_name_path, "w", encoding="utf-8") as f:
+            namewrite = [",".join(list(self.names.keys())) + "\n"]
             t = 0
             for i in range(len(self.nametable)):
-                if self.nametable[i][1] == "男" or self.nametable[i][1] == "0":
-                    t = 0
-                elif self.nametable[i][1] == "女" or self.nametable[i][1] == "1":
-                    t = 1
-                else:
-                    t = 2
-                self.nametable[i][1] = str(t)
-                namewrite.append(",".join(self.nametable[i])+"\n")
+                if len(self.nametable[i]) > 1:
+                    self.nametable[i][1] = str(t)
+                namewrite.append(",".join(self.nametable[i]) + "\n")
+                t += 1
             logger.debug(namewrite)
             f.writelines(namewrite)
 
@@ -711,6 +717,7 @@ class NameEdit(QFrame):
         global current_name_path
         name = pd.read_csv(current_name_path, sep=",", header=0)
         name = name.to_dict()
+        self.nametable = []
         self.names["name"] = list(name["name"].values())
         self.names["sex"] = list(name["sex"].values())
         self.names["no"] = list(name["no"].values())
@@ -720,16 +727,11 @@ class NameEdit(QFrame):
             for i in range(len(self.names[k])):
                 self.names[k][i] = str(self.names[k][i])
         for i in range(len(self.names["name"])):
-            if int(self.names["sex"][i]) == 0:
-                t = "男"
-            elif int(self.names["sex"][i]) == 1:
-                t = "女"
-            else:
-                t = "其他"
             tmp = []
             for t in self.names.keys():
                 tmp.append(self.names[t][i])
             self.nametable.append(tmp)
+            logger.debug(tmp)
         logger.debug(self.nametable)
         logger.info("名单加载完成")
 
@@ -741,11 +743,6 @@ class Settings(QFrame):
         self.stack = QStackedWidget(self)
         self.pivot = Pivot(self)
         self.df = QVBoxLayout(self)
-        self.scrollArea = ScrollArea()
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.optv =QWidget()
-        self.opts = QVBoxLayout(self.optv)
         self.tlog = PushButton(FluentIcon.DOCUMENT,"测试日志输出")
         self.rlog = PushButton(FluentIcon.SYNC,"重载日志系统")
         self.tcrash = PushButton(FluentIcon.CLOSE,"测试引发崩溃")
@@ -771,81 +768,102 @@ class Settings(QFrame):
             text="锁定"
         )
         self.lock.clicked.connect(self.relock)
-        self.sets = [SubtitleLabel("常规"),
-        SwitchSettingCard(
-            configItem=cfg.allowRepeat,
-            icon=FluentIcon.LIBRARY,
-            title="允许重复点名",
-            content="允许点到重复名字"
-        ),
-        SwitchSettingCard(
-            configItem=cfg.supportCS,
-            icon=FluentIcon.LINK,
-            title="课表软件联动",
-            content="启用后将在ClassIsland/Class Widgets上（而非主界面）显示抽选结果，需要安装对应插件"
-        ),
-        SwitchSettingCard(
-            configItem=cfg.autoStartup,
-            icon=FluentIcon.POWER_BUTTON,
-            title="开机自启",
-            content="开机时自动启动（对于非Windows系统无效）"
-        ),
-        self.cKey,
-        SubtitleLabel("安全设置"),
-        HyperlinkCard(
-            icon=FluentIcon.INFO,
-            title="使用前必读",
-            content="以下设置项在初次打开时会为您生成密钥，请妥善保管\n您需要凭密钥解锁限制，如果丢失请参照文档执行操作",
-            url="https://namepicker-docs.netlify.app/guide/quickstart/lock.html",
-            text="点击查看文档"
-        ),
-        self.lock,
-        SwitchSettingCard(
-            configItem=cfg.lockNameEdit,
-            icon= FluentIcon.HIDE,
-            title="禁用名单编辑",
-            content="启用后，将无法进行软件内名单编辑，重启生效"
-        ),
-        SwitchSettingCard(
-         configItem=cfg.lockConfigEdit,
-         icon=FluentIcon.HIDE,
-         title="禁用设置编辑",
-         content="启用后，将无法进行软件内设置编辑，重启生效"
-        ),
-        SubtitleLabel("调试（不要随意使用以下功能，除非您知道您在干什么）"),
-        ComboBoxSettingCard(
-            configItem=cfg.logLevel,
-            icon=FluentIcon.DEVELOPER_TOOLS,
-            title="日志记录级别",
-            content="日志的详细程度（重启以应用更改）",
-            texts=["DEBUG", "INFO", "WARNING","ERROR"]
-        ),
-        self.tlog,
-        self.rlog,
-        self.tcrash,
-        SubtitleLabel("欢愉（太有乐子了）"),
-        SwitchSettingCard(
-            configItem=cfg.eco,
-            icon=FluentIcon.LEAF,
-            title="环保模式",
-            content="NamePicker致力于减少碳排放"
-        ),SwitchSettingCard(
-            configItem=cfg.justice,
-            icon=FluentIcon.SPEED_MEDIUM,
-            title="绝对公平模式",
-            content="启用后，将在主页显示一条提示"
-        )]
-        for i in self.sets:
-            self.opts.addWidget(i)
-        self.scrollArea.setStyleSheet("QScrollArea{background: transparent; border: none}")
-        self.scrollArea.setWidget(self.optv)
-        self.optv.setStyleSheet("QWidget{background: transparent}")
-        QScroller.grabGesture(self.scrollArea.viewport(), QScroller.LeftMouseButtonGesture)
+
+        self.scrollAreas = []
+        self.sets = [
+            [
+                SwitchSettingCard(
+                    configItem=cfg.allowRepeat,
+                    icon=FluentIcon.LIBRARY,
+                    title="允许重复点名",
+                    content="允许点到重复名字"
+                ),
+                SwitchSettingCard(
+                    configItem=cfg.supportCS,
+                    icon=FluentIcon.LINK,
+                    title="课表软件联动",
+                    content="启用后将在ClassIsland/Class Widgets上（而非主界面）显示抽选结果，需要安装对应插件"
+                ),
+                SwitchSettingCard(
+                    configItem=cfg.autoStartup,
+                    icon=FluentIcon.POWER_BUTTON,
+                    title="开机自启",
+                    content="开机时自动启动（对于非Windows系统无效）"
+                ),
+                self.cKey,
+            ],
+            [
+                HyperlinkCard(
+                    icon=FluentIcon.INFO,
+                    title="使用前必读",
+                    content="以下设置项在初次打开时会为您生成密钥，请妥善保管\n您需要凭密钥解锁限制，如果丢失请参照文档执行操作",
+                    url="https://namepicker-docs.netlify.app/guide/quickstart/lock.html",
+                    text="点击查看文档"
+                ),
+                self.lock,
+                SwitchSettingCard(
+                    configItem=cfg.lockNameEdit,
+                    icon= FluentIcon.HIDE,
+                    title="禁用名单编辑",
+                    content="启用后，将无法进行软件内名单编辑，重启生效"
+                ),
+                SwitchSettingCard(
+                configItem=cfg.lockConfigEdit,
+                icon=FluentIcon.HIDE,
+                title="禁用设置编辑",
+                content="启用后，将无法进行软件内设置编辑，重启生效"
+                ),
+            ],
+            [
+                ComboBoxSettingCard(
+                    configItem=cfg.logLevel,
+                    icon=FluentIcon.DEVELOPER_TOOLS,
+                    title="日志记录级别",
+                    content="日志的详细程度（重启以应用更改）",
+                    texts=["DEBUG", "INFO", "WARNING","ERROR"]
+                ),
+                self.tlog,
+                self.rlog,
+                self.tcrash,
+            ],
+            [
+                SwitchSettingCard(
+                    configItem=cfg.eco,
+                    icon=FluentIcon.LEAF,
+                    title="环保模式",
+                    content="NamePicker致力于减少碳排放"
+                ),SwitchSettingCard(
+                    configItem=cfg.justice,
+                    icon=FluentIcon.SPEED_MEDIUM,
+                    title="绝对公平模式",
+                    content="启用后，将在主页显示一条提示"
+                )
+            ]
+        ]
+        self.optvs = []
+        self.optss = []
+        for i in range(len(self.sets)):
+            self.scrollAreas.append(ScrollArea(self))
+            self.scrollAreas[i].setWidgetResizable(True)
+            self.scrollAreas[i].setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.scrollAreas[i].setStyleSheet("QScrollArea{background: transparent; border: none}")
+            QScroller.grabGesture(self.scrollAreas[i].viewport(), QScroller.LeftMouseButtonGesture)
+            self.optvs.append(QWidget())
+            self.optss.append(QVBoxLayout(self.optvs[i]))
+            for j in self.sets[i]:
+                self.optss[i].addWidget(j)
+            self.scrollAreas[i].setWidget(self.optvs[i])
+            self.optvs[i].setStyleSheet("QWidget{background: transparent}")
+        
+        self.addSubInterface(self.scrollAreas[0],"Settings_gen","常规")
+        self.addSubInterface(self.scrollAreas[1],"Settings_sec","安全")
+        self.addSubInterface(self.scrollAreas[2],"Settings_dbg","调试")
+        self.addSubInterface(self.scrollAreas[3],"Settings_el","欢愉")
+
         self.df.addWidget(self.pivot)
-        self.addSubInterface(self.scrollArea,"Settings","本体设置")
         for i in plugin_settings.keys():
             self.addSubInterface(plugin_settings[i], "%s"%i, "插件设置 - %s"%plugin_info[i]["name"])
-        self.pivot.setCurrentItem("Settings")
+        self.pivot.setCurrentItem("Settings_gen")
         self.df.addWidget(self.stack)
         cfg.autoStartup.valueChanged.connect(self.startupChange)
         cfg.lockNameEdit.valueChanged.connect(self.checkLock)
