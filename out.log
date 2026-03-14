@@ -1,12 +1,13 @@
-2026-03-14 13:36:52.685 | INFO     | __main__:<module>:122 - NamePicker Ver v2.2.0Remake Codename ChrysosHeirs Plugin API Version 1
-2026-03-14 13:36:52.685 | INFO     | __main__:<module>:123 - 「___ _ _ -_-- --- __- - --- -- --- _-_ _-_ --- _--⌋
-2026-03-14 13:36:52.702 | WARNING  | __main__:load_plugins:40 - 目录111.txt没有有效插件
-2026-03-14 13:36:53.688 | INFO     | __main__:loadname:591 - 名单加载完成
-2026-03-14 13:36:53.734 | INFO     | __main__:__init__:454 - 主界面初始化完成
-2026-03-14 13:36:53.736 | DEBUG    | __main__:loadname:734 - ['example', '0', '1']
-2026-03-14 13:36:53.737 | DEBUG    | __main__:loadname:735 - [['example', '0', '1']]
-2026-03-14 13:36:53.737 | INFO     | __main__:loadname:736 - 名单加载完成
-2026-03-14 13:36:53.829 | INFO     | __main__:__init__:871 - 设置界面初始化完成
-2026-03-14 13:36:53.836 | INFO     | __main__:__init__:329 - 插件设置界面初始化完成
-2026-03-14 13:36:53.844 | INFO     | __main__:__init__:979 - 关于界面初始化
-2026-03-14 13:36:53.876 | INFO     | __main__:__init__:1054 - 主界面初始化
+2026-03-14 14:05:38.923 | INFO     | __main__:<module>:122 - NamePicker Ver v2.2.0Remake Codename ChrysosHeirs Plugin API Version 1
+2026-03-14 14:05:38.924 | INFO     | __main__:<module>:123 - 「___ _ _ -_-- --- __- - --- -- --- _-_ _-_ --- _--⌋
+2026-03-14 14:05:38.933 | WARNING  | __main__:load_plugins:40 - 目录111.txt没有有效插件
+2026-03-14 14:05:39.482 | INFO     | __main__:loadname:591 - 名单加载完成
+2026-03-14 14:05:39.528 | INFO     | __main__:__init__:454 - 主界面初始化完成
+2026-03-14 14:05:39.530 | DEBUG    | __main__:loadname:734 - ['你好', '0', '1']
+2026-03-14 14:05:39.530 | DEBUG    | __main__:loadname:735 - [['你好', '0', '1']]
+2026-03-14 14:05:39.530 | INFO     | __main__:loadname:736 - 名单加载完成
+2026-03-14 14:05:39.633 | INFO     | __main__:__init__:871 - 设置界面初始化完成
+2026-03-14 14:05:39.640 | INFO     | __main__:__init__:329 - 插件设置界面初始化完成
+2026-03-14 14:05:39.649 | INFO     | __main__:__init__:986 - 关于界面初始化
+2026-03-14 14:05:39.688 | INFO     | __main__:__init__:1061 - 主界面初始化
+2026-03-14 14:05:42.364 | DEBUG    | __main__:checkLocker:1066 - <__main__.About object at 0x000002CBFFDBDFD0>

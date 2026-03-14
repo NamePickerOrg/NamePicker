@@ -913,6 +913,13 @@ class Settings(QFrame):
         logger.warning("这是Warning日志")
         logger.error("这是Error日志")
 
+    def i_love_debug(self):
+        w = MessageBox("危险操作", "调试页面的内容仅供开发者测试使用，如果您不知道您在干什么，请不要使用此页面功能", self)
+        w.yesButton.setText("我真的很清楚我在干什么！")
+        w.cancelButton.setText("算了")
+        if not w.exec():
+            self.pivot.setCurrentItem("Settings_gen")
+
     def reloadLog(self):
         w = MessageBox("危险操作", "重载日志系统会清空此前日志并可能引发问题，请不要！不要！不要！使用该功能！除非您真的清楚您在干什么！", self)
         w.yesButton.setText("我真的很清楚我在干什么！")
@@ -956,7 +963,7 @@ class About(QFrame):
         self.setObjectName(text.replace(' ', 'About'))
         self.df = QVBoxLayout(self)
         self.about = TitleLabel("关于")
-        self.image = ImageLabel(QPixmap("assets/NamePickerCircle.png"))
+        self.image = ImageLabel(QPixmap("assets/NamePickerCircle.png").scaledToWidth(self.geometry().width()))
         # self.image.resize(100,100)
         # self.image.setScaledContents(True)
         self.ver = SubtitleLabel("NamePicker %s - Codename %s"%(VERSION,CODENAME))
@@ -1153,7 +1160,6 @@ class TrayWindow(QWidget):
 
     def show_main_window(self):
         self.main_window.show()
-        self.main_window.setWindowState(Qt.WindowActive)
         self.main_window.activateWindow()
 
     def paintEvent(self, event):
