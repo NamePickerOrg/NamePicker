@@ -1153,6 +1153,7 @@ class TrayWindow(QWidget):
 
     def show_main_window(self):
         self.main_window.show()
+        self.main_window.setWindowState(Qt.WindowActive)
         self.main_window.activateWindow()
 
     def paintEvent(self, event):
