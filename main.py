@@ -611,7 +611,7 @@ class Choose(QFrame):
 
     def relaod(self,index):
         global current_name_path
-        current_name_path = f"names/{os.listdir("names")[index]}"
+        current_name_path = "names/%s"%os.listdir("names")[index]
         self.loadname()
 
 class NameEdit(QFrame):
