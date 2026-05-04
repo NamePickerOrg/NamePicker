@@ -4,9 +4,9 @@
 <h3>一款简洁的点名软件</h3>
 </div>
 
-[QQ群（群号2153027375）](https://qm.qq.com/q/fTjhKuAlCU)
-
 [NamePicker文档](https://namepicker-docs.netlify.app/)
+
+> SecRandom 太牛逼了，已摆烂，想维护的自己fork一个分支，记得开源就行
 
 > [!note]
 > 
